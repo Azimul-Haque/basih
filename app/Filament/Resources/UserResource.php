@@ -21,7 +21,7 @@ class UserResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
     protected static ?string $modelLabel = 'ব্যবহারকারী তালিকা';
-    
+
     protected static ?string $pluralModelLabel = 'ব্যবহারকারী তালিকা';
 
     public static function form(Form $form): Form
@@ -83,6 +83,7 @@ class UserResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
