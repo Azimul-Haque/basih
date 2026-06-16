@@ -19,7 +19,7 @@ class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $modelLabel = '';
+    protected static ?string $modelLabel = 'ব্যবহারকারী তালিকা';
 
     public static function form(Form $form): Form
     {
