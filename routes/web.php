@@ -6,4 +6,4 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/clear', [Controller::class, 'clear']);
+Route::get('/clear', [IndexController::class, 'clear']);
