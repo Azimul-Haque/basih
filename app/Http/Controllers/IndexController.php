@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Artisan;
 
 class IndexController extends Controller
 {
-    public static function clear()
+    public function clear()
     {
         Artisan::call('optimize:clear');
         Session::flush();
