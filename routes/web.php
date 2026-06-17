@@ -7,3 +7,4 @@ Route::get('/', function () {
 });
 
 Route::get('/clear', ['as'=>'clear','uses'=>'Controllers/Controller@clear']);
+Route::get('/clear', [Controller::class, 'clear']);
