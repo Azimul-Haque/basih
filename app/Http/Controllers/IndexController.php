@@ -7,7 +7,7 @@ use Artisan;
 
 class IndexController extends Controller
 {
-    public function clear()
+    public static function clear()
     {
         Artisan::call('optimize:clear');
         Session::flush();
