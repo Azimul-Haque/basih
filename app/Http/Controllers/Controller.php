@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use Artisan;
 
 abstract class Controller
 {
