@@ -65,9 +65,17 @@ class TransactionResource extends Resource
                                 $selectedType = $get('type') ?? 'credit';
                                 
                                 if ($selectedType === 'debit') {
-                                    return Category::where('type', 'debit')
-                                        ->pluck('name', 'id')
-                                        ->toArray();
+                                    $debitCategories = Category::where('type', 'debit')->get();
+                                    
+                                    $debitOptions = [];
+                                    foreach ($debitCategories as $cat) {
+                                        if ($cat->is_stock) {
+                                            $debitOptions[$cat->id] = $cat->name . ' [স্টক]'; // যেমন: ভুট্টা ক্রয় [স্টক]
+                                        } else {
+                                            $debitOptions[$cat->id] = $cat->name; // সাধারণ খরচ
+                                        }
+                                    }
+                                    return $debitOptions;
                                 }
 
                                 $standardCredits = Category::where('type', 'credit')->pluck('name', 'id')->toArray();
