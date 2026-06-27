@@ -65,6 +65,7 @@ class TransactionResource extends Resource
                             ->preload()
                             ->required()
                             ->reactive()
+                            ->live()
                             // This allows adding a new category on the go via a dynamic pop-up modal!
                             ->createOptionForm([
                                 Forms\Components\TextInput::make('name')
