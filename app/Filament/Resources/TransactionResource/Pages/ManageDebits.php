@@ -4,7 +4,7 @@ namespace App\Filament\Resources\TransactionResource\Pages;
 
 use App\Filament\Resources\TransactionResource;
 use Filament\Resources\Pages\Page;
-use Filament\Tables\Concerns\IntersectsWithTables;
+use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 
