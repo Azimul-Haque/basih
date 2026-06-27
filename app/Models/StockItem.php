@@ -17,10 +17,10 @@ class StockItem extends Model
         return $this->belongsTo(Transaction::class);
     }
 
-    public function stockType(): BelongsTo
-    {
-        return $this->belongsTo(StockType::class);
-    }
+    // public function stockType(): BelongsTo
+    // {
+    //     return $this->belongsTo(StockType::class);
+    // }
 
     public function unit(): BelongsTo
     {
