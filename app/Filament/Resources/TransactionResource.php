@@ -483,20 +483,26 @@ class TransactionResource extends Resource
                         $currentUrl = request()->url();
                         
                         if (str_contains($currentUrl, 'credits')) {
-                            // জমা খাতার জন্য: ১. ক্রেডিট টাইপ ক্যাটাগরি + ২. যে স্টক ক্যাটাগরিগুলোর ব্যালেন্স এখনও ০-এর চেয়ে বেশি
-                            return \App\Models\Category::where('type', 'credit')
-                                ->orWhere(function ($query) {
-                                    $query->where('is_stock', true)
-                                        ->whereHas('stockItems', function ($q) {
-                                            // আপনার স্টক লজিক অনুযায়ী (উদা: বর্তমান কোয়ান্টিটি ০ এর বেশি আছে এমন)
-                                            $q->where('quantity', '>', 0); 
-                                        });
+                            // ১. ডিফল্ট ক্রেডিট টাইপ ক্যাটাগরিগুলোর আইডি নেওয়া হলো
+                            $creditCategoryIds = \App\Models\Category::where('type', 'credit')->pluck('id')->toArray();
+
+                            // ২. ট্রানজেকশন ও স্টক আইটেম টেবিল থেকে যে স্টকগুলোর পরিমাণ এখনো ০-এর বেশি, তাদের ক্যাটাগরি আইডি নেওয়া হলো
+                            $activeStockCategoryIds = \App\Models\Transaction::whereHas('stockItem', function ($query) {
+                                    $query->where('quantity', '>', 0);
                                 })
-                                ->pluck('name', 'id');
+                                ->pluck('category_id')
+                                ->unique()
+                                ->toArray();
+
+                            // দুটি আইডির অ্যারে একসাথে মার্জ করে ইউনিক আইডি লিস্ট তৈরি
+                            $finalCategoryIds = array_unique(array_merge($creditCategoryIds, $activeStockCategoryIds));
+
+                            // ফাইনাল আইডি লিস্ট দিয়ে ক্যাটাগরির নামগুলো রিটার্ন করা
+                            return \App\Models\Category::whereIn('id', $finalCategoryIds)->pluck('name', 'id');
+
                         } elseif (str_contains($currentUrl, 'debits')) {
                             // খরচ খাতার জন্য: শুধুমাত্র debit টাইপের ক্যাটাগরিগুলো
-                            return \App\Models\Category::where('type', 'debit')
-                                ->pluck('name', 'id');
+                            return \App\Models\Category::where('type', 'debit')->pluck('name', 'id');
                         }
 
                         // গ্লোবাল ফলব্যাক
