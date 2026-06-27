@@ -227,46 +227,46 @@ class TransactionResource extends Resource
                     })
                     ->schema([
                         // ১. পরিমাপের একক
-                        Forms\Components\Select::make('unit_id')
-                            ->label('পরিমাপের একক')
-                            ->options(\App\Models\Unit::pluck('name', 'id'))
-                            ->searchable()
-                            ->preload()
-                            ->required()
-                            // ১. ডাইনামিক ডিফল্ট ভ্যালু (আগের মতোই থাকবে)
-                            ->default(function (Forms\Get $get) {
-                                $categoryId = $get('../../category_id') ?? $get('../category_id');
-                                if (!$categoryId) return null;
+                        // Forms\Components\Select::make('unit_id')
+                        //     ->label('পরিমাপের একক')
+                        //     ->options(\App\Models\Unit::pluck('name', 'id'))
+                        //     ->searchable()
+                        //     ->preload()
+                        //     ->required()
+                        //     // ১. ডাইনামিক ডিফল্ট ভ্যালু (আগের মতোই থাকবে)
+                        //     ->default(function (Forms\Get $get) {
+                        //         $categoryId = $get('../../category_id') ?? $get('../category_id');
+                        //         if (!$categoryId) return null;
 
-                                $lastStockItem = \DB::table('stock_items')
-                                    ->join('transactions', 'stock_items.transaction_id', '=', 'transactions.id')
-                                    ->where('transactions.category_id', $categoryId)
-                                    ->where('transactions.type', 'debit')
-                                    ->orderBy('transactions.date', 'desc')
-                                    ->orderBy('transactions.id', 'desc')
-                                    ->first();
+                        //         $lastStockItem = \DB::table('stock_items')
+                        //             ->join('transactions', 'stock_items.transaction_id', '=', 'transactions.id')
+                        //             ->where('transactions.category_id', $categoryId)
+                        //             ->where('transactions.type', 'debit')
+                        //             ->orderBy('transactions.date', 'desc')
+                        //             ->orderBy('transactions.id', 'desc')
+                        //             ->first();
 
-                                return $lastStockItem ? $lastStockItem->unit_id : null;
-                            })
-                            // 🔥 ম্যাজিক পার্ট: ক্রেডিট বা বিক্রয় মোড হলে ফিল্ডটিতে ক্লিক বা এডিট করা যাবে না, 
-                            // কিন্তু ভ্যালুটি ইনপুটে একদম স্পষ্ট ও সুন্দরভাবে ভেসে থাকবে!
-                            ->extraAttributes(function (Forms\Get $get) {
-                                $type = $get('../../type') ?? $get('../type') ?? request()->input('components.0.snapshot.data.data.type') ?? 'credit';
+                        //         return $lastStockItem ? $lastStockItem->unit_id : null;
+                        //     })
+                        //     // 🔥 ম্যাজিক পার্ট: ক্রেডিট বা বিক্রয় মোড হলে ফিল্ডটিতে ক্লিক বা এডিট করা যাবে না, 
+                        //     // কিন্তু ভ্যালুটি ইনপুটে একদম স্পষ্ট ও সুন্দরভাবে ভেসে থাকবে!
+                        //     ->extraAttributes(function (Forms\Get $get) {
+                        //         $type = $get('../../type') ?? $get('../type') ?? request()->input('components.0.snapshot.data.data.type') ?? 'credit';
                                 
-                                if ($type === 'credit') {
-                                    return [
-                                        'style' => 'pointer-events: none; background-color: rgba(243, 244, 246, 0.1); cursor: not-allowed;',
-                                        'tabindex' => '-1', // কিবোর্ড ফোকাস ব্লক করার জন্য
-                                    ];
-                                }
+                        //         if ($type === 'credit') {
+                        //             return [
+                        //                 'style' => 'pointer-events: none; background-color: rgba(243, 244, 246, 0.1); cursor: not-allowed;',
+                        //                 'tabindex' => '-1', // কিবোর্ড ফোকাস ব্লক করার জন্য
+                        //             ];
+                        //         }
                                 
-                                return [];
-                            })
-                            ->createOptionForm([
-                                Forms\Components\TextInput::make('name')->label('নতুন পরিমাপের একক')->required(),
-                            ])
-                            ->createOptionUsing(fn (array $data) => \App\Models\Unit::create($data)->id)
-                            ->columnSpan(['default' => 12, 'md' => 6]),
+                        //         return [];
+                        //     })
+                        //     ->createOptionForm([
+                        //         Forms\Components\TextInput::make('name')->label('নতুন পরিমাপের একক')->required(),
+                        //     ])
+                        //     ->createOptionUsing(fn (array $data) => \App\Models\Unit::create($data)->id)
+                        //     ->columnSpan(['default' => 12, 'md' => 6]),
 
                         // 🔥 ১. যদি বিক্রয় (Credit) মোড হয়, তবে এটি শুধু ভ্যালুটি চমৎকারভাবে স্ক্রিনে দেখাবে (Uneditable)
                         Forms\Components\Placeholder::make('unit_name_placeholder')
