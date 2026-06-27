@@ -162,7 +162,7 @@ class TransactionResource extends Resource
 
                                 $totalCredit = \App\Models\Transaction::where('type', 'credit')->sum('amount');
                                 $totalDebit = \App\Models\Transaction::where('type', 'debit')->sum('amount');
-                                return 'বর্তমান সর্বোচ্চ ব্যালেন্স: ৳' . number_format($totalCredit - $totalDebit);
+                                return 'বর্তমান ব্যবহার্য ব্যালেন্স: ৳' . number_format($totalCredit - $totalDebit);
                             })
                             ->hintColor('warning') 
                             ->rules(function (Forms\Get $get) {
