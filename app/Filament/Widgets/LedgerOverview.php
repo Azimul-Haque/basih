@@ -10,8 +10,11 @@ use Carbon\Carbon;
 
 class LedgerOverview extends BaseWidget
 {
-    // লাইভ ডেটা রিফ্রেশ রেট (ঐচ্ছিক - প্রতি ১৫ সেকেন্ডে ড্যাশবোর্ড অটো আপডেট হবে)
+    // লাইভ ডেটা রিফ্রেশ রেট (প্রতি ১৫ সেকেন্ডে ড্যাশবোর্ড অটো আপডেট হবে)
     protected static ?string $pollingInterval = '15s';
+
+    // উইজেটটিকে গ্রিড লুকে মোবাইল এবং ডেস্কটপে সুন্দরভাবে রি-অ্যারেঞ্জ করার বুটস্ট্র্যাপ কলাম লেআউট
+    protected int | array | string $columnSpan = 'full';
 
     protected function getStats(): array
     {
@@ -36,30 +39,59 @@ class LedgerOverview extends BaseWidget
         $todayCredit = (float) Transaction::where('type', 'credit')->whereDate('date', $today)->sum('amount');
         $todayDebitAmount = (float) Transaction::where('type', 'debit')->whereDate('date', $today)->sum('amount');
         
-        // আজকের অতিরিক্ত খরচ বের করার জন্য কুয়েরি
         $todayExtraCost = (float) DB::table('stock_items')
             ->join('transactions', 'stock_items.transaction_id', '=', 'transactions.id')
-            ->whereDate('transactions.date', $today)
+            ->where('transactions.date', $today)
             ->sum('stock_items.extra_cost');
             
         $todayTotalDebit = $todayDebitAmount + $todayExtraCost;
 
         return [
+            // ==========================================
+            // 🔥 নতুন নেভিগেশনাল ক্লিকযোগ্য কার্ড সেকশন (সার্বজনীন রো ১)
+            // ==========================================
+
+            // 🟢 কার্ড এ: জমা খাতা (Clickable)
+            Stat::make(' ', '➡️ জমা খাতা')
+                ->description('সকল জমার বিবরণী দেখতে এখানে ক্লিক করুন')
+                ->descriptionIcon('heroicon-m-arrow-up-right')
+                ->color('success')
+                ->url(url('admin/transactions/credits')) // জমা খাতার কাস্টম পেজ লিংক
+                ->extraAttributes([
+                    'class' => 'cursor-pointer transition hover:scale-[1.02] duration-200 border-l-4 border-emerald-500 rounded-xl shadow-sm',
+                    'style' => 'background-color: rgba(16, 185, 129, 0.08); font-weight: 900;',
+                ]),
+
+            // 🔴 কার্ড বি: খরচ খাতা (Clickable)
+            Stat::make(' ', '➡️ খরচ খাতা')
+                ->description('সকল খরচের বিবরণী দেখতে এখানে ক্লিক করুন')
+                ->descriptionIcon('heroicon-m-arrow-down-right')
+                ->color('danger')
+                ->url(url('admin/transactions/debits')) // খরচ খাতার কাস্টম পেজ লিংক
+                ->extraAttributes([
+                    'class' => 'cursor-pointer transition hover:scale-[1.02] duration-200 border-l-4 border-rose-500 rounded-xl shadow-sm',
+                    'style' => 'background-color: rgba(239, 68, 68, 0.08); font-weight: 900;',
+                ]),
+
+            // ==========================================
+            // 📊 বিদ্যমান ৩টি লাইভ স্ট্যাটাস কার্ড (সার্বজনীন রো ২)
+            // ==========================================
+
             // 💳 কার্ড ১: মোট জমা ও বর্তমান ব্যালেন্স
-            Stat::make('বর্তমান ক্যাশ ব্যালেন্স: ৳', '৳ ' . number_format($currentBalance))
-                ->description('মোট জমা ' . number_format($totalCredit))
+            Stat::make('বর্তমান ক্যাশ ব্যালেন্স', '৳ ' . number_format($currentBalance))
+                ->description('মোট জমা: ৳' . number_format($totalCredit))
                 ->descriptionIcon('heroicon-m-wallet')
                 ->color($currentBalance >= 0 ? 'success' : 'danger'),
 
-            // 💸 কার্ড ২: মোট খরচ (অতিরিক্ত খরচসহ)
+            // 💸 কার্ড ২: সর্বমোট খরচ
             Stat::make('সর্বমোট খরচ (ডেবিট)', '৳ ' . number_format($finalTotalDebit))
                 ->description('মূল খরচ: ৳' . number_format($totalDebitAmount) . ' | অতিরিক্ত: ৳' . number_format($totalExtraCost))
                 ->descriptionIcon('heroicon-m-arrow-trending-down')
                 ->color('danger'),
 
-            // 📅 কার্ড ৩: আজকের তারিখ এবং লাইভ ট্র্যাকিং
+            // 📅 কার্ড ৩: আজকের লাইভ ট্র্যাকিং
             Stat::make('আজকের তারিখ', Carbon::now()->format('d M, Y'))
-                ->description('আজকের জমা: ৳' . number_format($todayCredit) . ' | আজকের খরচ: ৳' . number_format($todayTotalDebit))
+                ->description('আজকের জমা: ৳' . number_format($todayCredit) . ' | খরচ: ৳' . number_format($todayTotalDebit))
                 ->descriptionIcon('heroicon-m-clock')
                 ->color('info'),
         ];
