@@ -271,7 +271,7 @@ class TransactionResource extends Resource
                                 }
 
                                 if ($type === 'credit') {
-                                    return '⚠️ গুদামে অবশিষ্ট আছে: ' . number_format($availableStock);
+                                    return '⚠️ গুদাম/স্টকে অবশিষ্ট আছে: ' . number_format($availableStock);
                                 }
 
                                 return null;
