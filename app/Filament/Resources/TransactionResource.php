@@ -65,8 +65,10 @@ class TransactionResource extends Resource
                             ->relationship(
                                 name: 'category',
                                 titleAttribute: 'name',
-                                modifyQueryUsing: fn (Forms\Get $get, $query) => $query
-                                    ->where('type', $get('type') ?? 'credit')
+                                modifyQueryUsing: function (Forms\Get $get, $query) {
+                                    $currentType = $get('type') ?? 'credit'; // Default to credit if empty
+                                    return $query->where('type', $currentType);
+                                }
                             )
                             ->createOptionForm([
                                 Forms\Components\TextInput::make('name')
