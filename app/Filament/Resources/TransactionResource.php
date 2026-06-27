@@ -262,7 +262,7 @@ class TransactionResource extends Resource
                                 
                                 return $type === 'debit';
                             })
-                            ->columnSpan(12),
+                            ->columnSpan(['default' => 12, 'md' => 6]),
                     ])->columns(12)
             ]);
     }
