@@ -20,7 +20,7 @@ class UnitResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $modelLabel = 'পরিমাপের একক';
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 5;
     protected static ?string $pluralModelLabel = 'স্টক ইউনিট তালিকা';
     protected static ?string $navigationLabel = 'স্টক ইউনিট তালিকা';
 
