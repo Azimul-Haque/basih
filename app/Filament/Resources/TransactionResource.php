@@ -90,8 +90,8 @@ class TransactionResource extends Resource
                                     ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের ধরণ ও একক এন্ট্রি করতে হবে।')
                                     ->default(false)
                                     // 🔥 FIXED TYPE-HINT HERE: Using mixed to accept the Toggle component instance safely
-                                    ->visible(function (mixed $component) {
-                                        $mainFormState = $component->getContainer()->getParentComponent()->getLivewire()->data;
+                                    ->visible(function (Filament\Forms\Form $form) {
+                                        $mainFormState = $form->getLivewire()->data;
                                         return ($mainFormState['type'] ?? 'credit') === 'debit';
                                     }),
                             ])
