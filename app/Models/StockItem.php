@@ -33,7 +33,7 @@ class StockItem extends Model
             $quantity = (float) $stockItem->quantity;
             $transaction = $stockItem->transaction;
             
-            // ফর্মে ইনপুট দেওয়া বিশুদ্ধ মূল দাম
+            // ফর্মে ইনপুট দেওয়া বিশুদ্ধ মূল দাম (Base Amount)
             $baseAmount = $transaction ? (float) $transaction->amount : (float) request()->input('amount', 0);
             $extraCost = (float) $stockItem->extra_cost;
 
@@ -43,21 +43,25 @@ class StockItem extends Model
             // unit_price হিসাব
             $stockItem->unit_price = $quantity > 0 ? ($totalCost / $quantity) : 0;
 
-            // 🔥 নতুন সংযোজন: যদি ডাটাবেজে ইনসার্ট হওয়ার সময় unit_id কোনো কারণে ফাঁকা থাকে (যেমন বিক্রয় মোডে)
-            if (empty($stockItem->unit_id) && $transaction) {
-                $categoryId = $transaction->category_id;
+            if ($transaction) {
+                // 🔥 ১. স্টক আইটেমের টাইপ ডাইনামিকালি সেট করা (debit = buy, credit = sell)
+                $stockItem->type = $transaction->type === 'debit' ? 'buy' : 'sell';
 
-                // গুদামে এই খাতের পণ্য সর্বশেষ যে এককে কেনা হয়েছিল, মডেল নিজে থেকে সেই এককটি খুঁজে বের করবে
-                $lastPurchaseItem = self::join('transactions', 'stock_items.transaction_id', '=', 'transactions.id')
-                    ->where('transactions.category_id', $categoryId)
-                    ->where('transactions.type', 'debit')
-                    ->orderBy('transactions.date', 'desc')
-                    ->orderBy('transactions.id', 'desc')
-                    ->select('stock_items.unit_id')
-                    ->first();
+                // ২. যদি বিক্রয় (sell) মোড হয় এবং unit_id খালি থাকে, তবে পূর্বের কেনা এককটি বসানো
+                if (empty($stockItem->unit_id)) {
+                    $categoryId = $transaction->category_id;
 
-                if ($lastPurchaseItem) {
-                    $stockItem->unit_id = $lastPurchaseItem->unit_id;
+                    $lastPurchaseItem = self::join('transactions', 'stock_items.transaction_id', '=', 'transactions.id')
+                        ->where('transactions.category_id', $categoryId)
+                        ->where('transactions.type', 'debit')
+                        ->orderBy('transactions.date', 'desc')
+                        ->orderBy('transactions.id', 'desc')
+                        ->select('stock_items.unit_id')
+                        ->first();
+
+                    if ($lastPurchaseItem) {
+                        $stockItem->unit_id = $lastPurchaseItem->unit_id;
+                    }
                 }
             }
         });
