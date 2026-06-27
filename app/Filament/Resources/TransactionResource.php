@@ -64,10 +64,8 @@ class TransactionResource extends Resource
                             ->options(function (Forms\Get $get) {
                                 $selectedType = $get('type') ?? 'credit';
                                 
-                                // DEBIT MODE: Show normal items and append [স্টক] if it tracks items
                                 if ($selectedType === 'debit') {
                                     $debitCategories = Category::where('type', 'debit')->get();
-                                    
                                     $debitOptions = [];
                                     foreach ($debitCategories as $cat) {
                                         $debitOptions[$cat->id] = $cat->is_stock ? $cat->name . ' [স্টক]' : $cat->name;
@@ -75,20 +73,22 @@ class TransactionResource extends Resource
                                     return $debitOptions;
                                 }
 
-                                // CREDIT MODE: Only show standard income OR stock categories with active warehouse items
                                 $standardCredits = Category::where('type', 'credit')->pluck('name', 'id')->toArray();
                                 $stockDebits = Category::where('type', 'debit')->where('is_stock', true)->get();
 
                                 $salesOptions = [];
                                 foreach ($stockDebits as $cat) {
-                                    // Cumulative stock logic
+                                    // 🔥 SAFE GUARD CHECK: Fallback to 0 if schema columns are missing or named differently
+                                    if (!\Schema::hasColumn('transactions', 'quantity')) {
+                                        $salesOptions[$cat->id] = $cat->name . ' - বিক্রয় (মজুদ ট্র্যাকিং নিষ্ক্রিয়)';
+                                        continue;
+                                    }
+
                                     $totalPurchased = \App\Models\Transaction::where('category_id', $cat->id)->where('type', 'debit')->sum('quantity');
                                     $totalSold = \App\Models\Transaction::where('category_id', $cat->id)->where('type', 'credit')->sum('quantity');
                                     $currentStock = $totalPurchased - $totalSold;
 
-                                    // 🔥 HIDE IF 0: Only append to dropdown if physical stock is above zero
                                     if ($currentStock > 0) {
-                                        // Fetch last used unit name for clean displaying
                                         $lastTx = \App\Models\Transaction::where('category_id', $cat->id)->latest()->first();
                                         $unitLabel = $lastTx && $lastTx->unit ? $lastTx->unit->name : 'একক';
 
