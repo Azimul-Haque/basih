@@ -10,7 +10,7 @@ use Filament\Tables\Table;
 
 class ManageCredits extends Page implements HasTable
 {
-    use IntersectsWithTables;
+    use InteractsWithTable;
 
     protected static string $resource = TransactionResource::class;
 
@@ -20,7 +20,6 @@ class ManageCredits extends Page implements HasTable
 
     public function table(Table $table): Table
     {
-        // 🔥 মূল টেবিল স্ট্রাকচার কল করে শুধু 'credit' (বিক্রয়/জমা) ডাটা ফিল্টার করা হলো
         return TransactionResource::table($table)
             ->modifyQueryUsing(fn ($query) => $query->where('type', 'credit'))
             ->heading('সকল জমার তালিকা');
