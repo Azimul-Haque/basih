@@ -16,4 +16,10 @@ class EditTransaction extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+
+    // 🔥 ADD THIS METHOD TO REDIRECT AFTER SAVING EDITS
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }
