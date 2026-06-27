@@ -80,7 +80,7 @@ class TransactionResource extends Resource
                                 foreach ($stockDebits as $cat) {
                                     // 🔥 SAFE GUARD CHECK: Fallback to 0 if schema columns are missing or named differently
                                     if (!\Schema::hasColumn('transactions', 'quantity')) {
-                                        // $salesOptions[$cat->id] = $cat->name . ' - বিক্রয় (মজুদ ট্র্যাকিং নিষ্ক্রিয়)';
+                                        $salesOptions[$cat->id] = $cat->name . ' - বিক্রয় (মজুদ ট্র্যাকিং নিষ্ক্রিয়)';
                                         continue;
                                     }
 
