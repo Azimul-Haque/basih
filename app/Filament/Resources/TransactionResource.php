@@ -184,7 +184,11 @@ class TransactionResource extends Resource
 
                 // 🔥 STOCKS SUB-FORM PANEL
                 Forms\Components\Section::make(function (Forms\Get $get) {
-                    return ($get('type') ?? 'credit') === 'debit' 
+                    // Step out to read root parameters dynamically
+                    $livewireData = $get('../') ?? [];
+                    $type = data_get($livewireData, 'type') ?? 'credit';
+                    
+                    return $type === 'debit' 
                         ? '📦 স্টক / ইনভেন্টরি বিবরণী (ক্রয় / মাল প্রাপ্তি)' 
                         : '📦 স্টক / ইনভেন্টরি বিবরণী (বিক্রয় / মাল খালাস)';
                 })
