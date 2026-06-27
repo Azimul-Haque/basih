@@ -12,9 +12,9 @@ class ManageCredits extends ListRecords
 
     protected static ?string $title = 'জমা খাতা (Credit)';
 
-    // 🔥 ফিলামেন্টের নেটিভ মেথড দিয়ে কুয়েরি ফিল্টার (এখানে কোনো getPage এরর আসবে না)
-    protected function modifyQueryUsing(Builder $query): Builder
+    // 🔥 অফিশিয়াল ফিলামেন্ট কুয়েরি আইসোলেশন বিল্ডার
+    protected function getTableQuery(): ?Builder
     {
-        return $query->where('type', 'credit');
+        return static::getResource()::getEloquentQuery()->where('type', 'credit');
     }
 }
