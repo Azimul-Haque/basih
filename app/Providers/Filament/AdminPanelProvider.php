@@ -38,6 +38,14 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 Pages\Dashboard::class,
             ])
+            ->navigationItems([
+                \Filament\Navigation\NavigationItem::make('ড্যাশবোর্ড')
+                    ->label('ড্যাশবোর্ড')
+                    ->icon('heroicon-o-home')
+                    ->isActiveWhen(fn () => request()->routeIs('filament.admin.pages.dashboard'))
+                    ->url(fn (): string => Pages\Dashboard::getUrl())
+                    ->sort(1), // ১ নম্বর সিরিয়াল
+            ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 // Widgets\AccountWidget::class,
@@ -63,7 +71,7 @@ class AdminPanelProvider extends PanelProvider
     public function boot(): void
     {
         // 🔥 ডিফল্ট ড্যাশবোর্ডের নাম ও টাইটেল বাংলায় রূপান্তর
-        Pages\Dashboard::navigationLabel('ড্যাশবোর্ড');
-        Pages\Dashboard::title('ড্যাশবোর্ড');
+        Dashboard::navigationLabel('ড্যাশবোর্ড');
+        Dashboard::title('ড্যাশবোর্ড');
     }
 }
