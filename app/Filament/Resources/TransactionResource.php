@@ -248,11 +248,11 @@ class TransactionResource extends Resource
                                 return $lastStockItem ? $lastStockItem->unit_id : null;
                             })
                             // 🔥 ম্যাজিক পার্ট: লেনদেনের ধরণ যদি 'credit' (বিক্রয়) হয়, তবে এই ফিল্ডটি এডিট করা যাবে না (Locked)
-                            ->disabled(function (Forms\Get $get) {
+                            ->readonly(function (Forms\Get $get) {
                                 $type = $get('../../type') ?? $get('../type') ?? request()->input('components.0.snapshot.data.data.type') ?? 'credit';
                                 return $type === 'credit';
                             })
-                            // ফিলামেন্ট ডিফল্টভাবে disabled ফিল্ডের ডাটা সাবমিট করে না, তাই ডাটাবেজে ভ্যালু পাঠাতে এটি বাধ্যতামূলক
+                            // ফিলামেন্ট ডিফল্টভাবে readonly ফিল্ডের ডাটা সাবমিট করে না, তাই ডাটাবেজে ভ্যালু পাঠাতে এটি বাধ্যতামূলক
                             ->dehydrated() 
                             ->createOptionForm([
                                 Forms\Components\TextInput::make('name')->label('নতুন পরিমাপের একক')->required(),
