@@ -38,14 +38,6 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 Pages\Dashboard::class,
             ])
-            ->navigationItems([
-                \Filament\Navigation\NavigationItem::make('ড্যাশবোর্ড')
-                    ->label('ড্যাশবোর্ড')
-                    ->icon('heroicon-o-home')
-                    ->isActiveWhen(fn () => request()->routeIs('filament.admin.pages.dashboard'))
-                    ->url(fn (): string => Pages\Dashboard::getUrl())
-                    ->sort(1), // ১ নম্বর সিরিয়াল
-            ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 // Widgets\AccountWidget::class,
