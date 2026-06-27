@@ -323,7 +323,7 @@ class TransactionResource extends Resource
                                 ->default(0)
                                 ->hidden(fn (Forms\Get $get) => ($get('../../type') ?? 'credit') === 'credit') // 🔥 ক্রেডিট হলে হিডেন
                                 ->columnSpan(12),
-                        ])->columns(12);
+                        ])->columns(12)
             ]);
     }
 
