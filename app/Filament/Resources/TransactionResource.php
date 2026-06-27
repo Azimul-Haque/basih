@@ -315,7 +315,11 @@ class TransactionResource extends Resource
                             ->numeric()
                             ->prefix('৳')
                             ->default(0)
-                            ->hidden(fn (Forms\Get $get) => ($get('../../type') ?? 'credit') === 'credit') // 🔥 ক্রেডিট হলে হিডেন
+                            // 🔥 লাইভ সেফ মাল্টি-লেভেল কন্ডিশনাল লুকআপ
+                            ->hidden(function (Forms\Get $get) {
+                                $type = $get('../../type') ?? $get('../type') ?? request()->input('components.0.snapshot.data.data.type') ?? 'credit';
+                                return $type === 'credit';
+                            })
                             ->columnSpan(12),
                     ])->columns(12)
             ]);
