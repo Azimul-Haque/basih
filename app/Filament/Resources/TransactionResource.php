@@ -132,7 +132,7 @@ class TransactionResource extends Resource
 
                                 Forms\Components\Toggle::make('is_stock')
                                     ->label('এটি কি স্টকের খাত?')
-                                    ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের পরিমাণ ও পরিমাপের একক এন্ট্রি করতে হবে।')
+                                    ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের পরিমাণ ও পরিমাপের একক (ইউনিট) এন্ট্রি করতে হবে।')
                                     ->default(false)
                                     ->visible(function (Forms\Components\Toggle $component) {
                                         $livewireData = $component->getLivewire()->data;
@@ -226,9 +226,9 @@ class TransactionResource extends Resource
                         return $category && $category->is_stock;
                     })
                     ->schema([
-                        // ১. পরিমাপের একক
+                        // ১. পরিমাপের একক (ইউনিট)
                         // Forms\Components\Select::make('unit_id')
-                        //     ->label('পরিমাপের একক')
+                        //     ->label('পরিমাপের একক (ইউনিট)')
                         //     ->options(\App\Models\Unit::pluck('name', 'id'))
                         //     ->searchable()
                         //     ->preload()
@@ -263,14 +263,14 @@ class TransactionResource extends Resource
                         //         return [];
                         //     })
                         //     ->createOptionForm([
-                        //         Forms\Components\TextInput::make('name')->label('নতুন পরিমাপের একক')->required(),
+                        //         Forms\Components\TextInput::make('name')->label('নতুন পরিমাপের একক (ইউনিট)')->required(),
                         //     ])
                         //     ->createOptionUsing(fn (array $data) => \App\Models\Unit::create($data)->id)
                         //     ->columnSpan(['default' => 12, 'md' => 6]),
 
                         // 🔥 ১. যদি বিক্রয় (Credit) মোড হয়, তবে এটি শুধু ভ্যালুটি চমৎকারভাবে স্ক্রিনে দেখাবে (Uneditable)
                         Forms\Components\Placeholder::make('unit_name_placeholder')
-                            ->label('পরিমাপের একক')
+                            ->label('পরিমাপের একক (ইউনিট)')
                             ->content(function (Forms\Get $get) {
                                 $categoryId = $get('../../category_id') ?? $get('../category_id');
                                 if (!$categoryId) return 'খাত নির্বাচন করুন...';
@@ -313,14 +313,14 @@ class TransactionResource extends Resource
 
                         // 🔥 ৩. আসল ড্রপডাউন সিলেক্টর (এটি শুধুমাত্র ক্রয়/Debit মোডে দৃশ্যমান ও এডিটেবল হবে)
                         Forms\Components\Select::make('unit_id')
-                            ->label('পরিমাপের একক')
+                            ->label('পরিমাপের একক (ইউনিট)')
                             ->options(\App\Models\Unit::pluck('name', 'id'))
                             ->searchable()
                             ->preload()
                             ->required()
                             ->visible(fn (Forms\Get $get) => ($get('../../type') ?? $get('../type') ?? 'credit') === 'debit') // শুধুমাত্র ক্রয় মোডে দেখাবে
                             ->createOptionForm([
-                                Forms\Components\TextInput::make('name')->label('নতুন পরিমাপের একক')->required(),
+                                Forms\Components\TextInput::make('name')->label('নতুন পরিমাপের একক (ইউনিট)')->required(),
                             ])
                             ->createOptionUsing(fn (array $data) => \App\Models\Unit::create($data)->id)
                             ->columnSpan(['default' => 12, 'md' => 6]),
