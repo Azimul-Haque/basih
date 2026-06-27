@@ -52,6 +52,7 @@ class TransactionResource extends Resource
                             ])
                             ->inline()
                             ->required()
+                            ->default('credit')
                             ->live() 
                             ->afterStateUpdated(fn ($set) => $set('category_id', null))
                             ->columnSpan(['default' => 12, 'md' => 4]),
@@ -60,7 +61,6 @@ class TransactionResource extends Resource
                             ->label('খাত / ক্যাটাগরি')
                             ->required()
                             ->searchable()
-                            ->default('credit')
                             ->live()
                             // 🔥 FIXED: Changed named parameter to modifyQueryUsing
                             ->relationship(
