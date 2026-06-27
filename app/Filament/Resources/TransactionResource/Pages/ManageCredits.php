@@ -15,7 +15,11 @@ class ManageCredits extends ListRecords
 
     protected function getTableQuery(): ?Builder
     {
-        return static::getResource()::getEloquentQuery()->where('type', 'credit');
+        // 🔥 type='credit' ফিল্টার করার পাশাপাশি তারিখ অনুযায়ী DESC অর্ডার লক করা হলো
+        return static::getResource()::getEloquentQuery()
+            ->where('type', 'credit')
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc'); // একই তারিখের একাধিক এন্ট্রি থাকলে আইডি দিয়ে নিখুঁত অর্ডার রাখার জন্য
     }
 
     // 🔥 জমা খাতার ডান কোণায় "জমা এন্ট্রি করুন" বাটন
