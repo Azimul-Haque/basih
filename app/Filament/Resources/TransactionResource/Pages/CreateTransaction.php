@@ -23,4 +23,13 @@ class CreateTransaction extends CreateRecord
 
         return $resource::getUrl('debits');
     }
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        // ইউআরএল থেকে টাইপ রিড করে ফর্মে পুশ করা
+        if (request()->has('type')) {
+            $data['type'] = request()->query('type');
+        }
+        return $data;
+    }
 }
