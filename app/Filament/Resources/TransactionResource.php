@@ -52,38 +52,35 @@ class TransactionResource extends Resource
                             ])
                             ->inline()
                             ->required()
-                            ->live() // Ensures instant state sync
+                            ->live() // Forces instant lifecycle re-hydration
                             ->afterStateUpdated(fn ($set) => $set('category_id', null))
                             ->columnSpan(['default' => 12, 'md' => 4]),
 
                         Forms\Components\Select::make('category_id')
                             ->label('খাত / ক্যাটাগরি')
-                            ->options(function (Forms\Get $get) {
-                                $type = $get('type');
-                                
-                                // If no type is selected yet, return all categories as a safe fallback
-                                if (!$type) {
-                                    return Category::pluck('name', 'id');
-                                }
-                                
-                                return Category::where('type', $type)->pluck('name', 'id');
-                            })
-                            ->searchable()
                             ->required()
+                            ->searchable()
                             ->live()
+                            // 🔥 THE PERFECT LOOKUP FIX: Maps relationship directly and filters reactively by the selected type
+                            ->relationship(
+                                name: 'category',
+                                titleAttribute: 'name',
+                                modifyRuleQueryUsing: fn (Forms\Get $get, $query) => $query
+                                    ->where('type', $get('type') ?? 'credit')
+                            )
                             ->createOptionForm([
                                 Forms\Components\TextInput::make('name')
                                     ->label('নতুন খাতের নাম')
                                     ->required(),
                             ])
-                            // 🔥 THE FIX: Capture data right before it hits the database and inject parent type manually
+                            // 🔥 THE COMPONENT SAVE FIX: Manually injects the selected type straight into creation
                             ->createOptionUsing(function (array $data, Forms\Get $get) {
                                 $category = Category::create([
                                     'name' => $data['name'],
-                                    'type' => $get('type'), 
+                                    'type' => $get('type') ?? 'credit',
                                 ]);
 
-                                return $category->id; // <-- Forces Filament to auto-select it instantly!
+                                return $category->id;
                             })
                             ->columnSpan(['default' => 12, 'md' => 4]),
 
