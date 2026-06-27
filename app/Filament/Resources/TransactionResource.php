@@ -71,11 +71,11 @@ class TransactionResource extends Resource
                                 Forms\Components\TextInput::make('name')
                                     ->label('নতুন খাতের নাম')
                                     ->required()
-                                    // 🔥 FIXED: Grab state using the absolute form context handler
+                                    // 🔥 FIXED NAMESPACE: Uses root Form class mapping directly
                                     ->unique(
                                         table: 'categories',
                                         column: 'name',
-                                        modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Filament\Forms\Form $form) {
+                                        modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Form $form) {
                                             $mainFormState = $form->getLivewire()->data;
                                             $parentType = $mainFormState['type'] ?? 'credit';
                                             return $rule->where('type', $parentType);
@@ -86,14 +86,13 @@ class TransactionResource extends Resource
                                     ->label('এটি কি স্টকের খাত?')
                                     ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের ধরণ ও একক এন্ট্রি করতে হবে।')
                                     ->default(false)
-                                    // 🔥 FIXED: Direct form level reference lookup bypassing tree walks
-                                    ->visible(function (Filament\Forms\Form $form) {
+                                    // 🔥 FIXED NAMESPACE BELOW
+                                    ->visible(function (Form $form) {
                                         $mainFormState = $form->getLivewire()->data;
                                         return ($mainFormState['type'] ?? 'credit') === 'debit';
                                     }),
                             ])
-                            ->createOptionUsing(function (array $data, Filament\Forms\Form $form) {
-                                // 🔥 FIXED: Secure state mapping execution block
+                            ->createOptionUsing(function (array $data, Form $form) {
                                 $mainFormState = $form->getLivewire()->data;
                                 $parentType = $mainFormState['type'] ?? 'credit';
 
