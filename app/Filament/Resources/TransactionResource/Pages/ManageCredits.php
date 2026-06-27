@@ -3,27 +3,18 @@
 namespace App\Filament\Resources\TransactionResource\Pages;
 
 use App\Filament\Resources\TransactionResource;
-use Filament\Resources\Pages\Page;
-use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Tables\Contracts\HasTable;
-use Filament\Tables\Table;
+use Filament\Resources\Pages\ListRecords;
+use Illuminate\Database\Eloquent\Builder;
 
-class ManageCredits extends Page implements HasTable
+class ManageCredits extends ListRecords
 {
-    use InteractsWithTable;
-
     protected static string $resource = TransactionResource::class;
-
-    protected static ?string $navigationLabel = 'জমা খাতা';
-
-    protected static string $view = 'filament.resources.transaction-resource.pages.manage-credits';
 
     protected static ?string $title = 'জমা খাতা (Credit)';
 
-    public function table(Table $table): Table
+    // 🔥 ফিলামেন্টের নেটিভ মেথড দিয়ে কুয়েরি ফিল্টার (এখানে কোনো getPage এরর আসবে না)
+    protected function modifyQueryUsing(Builder $query): Builder
     {
-        return TransactionResource::table($table)
-            ->modifyQueryUsing(fn ($query) => $query->where('type', 'credit'))
-            ->heading('সকল জমার তালিকা');
+        return $query->where('type', 'credit');
     }
 }
