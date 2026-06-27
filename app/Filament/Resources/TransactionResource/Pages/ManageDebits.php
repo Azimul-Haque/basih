@@ -4,6 +4,7 @@ namespace App\Filament\Resources\TransactionResource\Pages;
 
 use App\Filament\Resources\TransactionResource;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Actions\Action; // 👈 এই নেমস্পেসটি নিশ্চিত করুন
 use Illuminate\Database\Eloquent\Builder;
 
 class ManageDebits extends ListRecords
@@ -12,9 +13,21 @@ class ManageDebits extends ListRecords
 
     protected static ?string $title = 'খরচ খাতা (Debit)';
 
-    // 🔥 অফিশিয়াল ফিলামেন্ট কুয়েরি আইসোলেশন বিল্ডার
     protected function getTableQuery(): ?Builder
     {
         return static::getResource()::getEloquentQuery()->where('type', 'debit');
+    }
+
+    // 🔥 খরচ খাতার ডান কোণায় "খরচ করুন" বাটন
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('create_debit')
+                ->label('খরচ করুন')
+                ->icon('heroicon-m-minus')
+                ->color('danger') // লাল বাটন (খরচের প্রতীক)
+                ->size('lg')
+                ->url(fn (): string => static::getResource()::getUrl('create', ['type' => 'debit'])),
+        ];
     }
 }
