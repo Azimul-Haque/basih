@@ -112,6 +112,33 @@ class TransactionResource extends Resource
                             ->numeric()
                             ->prefix('৳')
                             ->required()
+                            // 🔥 DYNAMIC VALIDATION: Limits Debit to Total Available Balance
+                            ->rules(function (Forms\Get $get) {
+                                $type = $get('type') ?? 'credit';
+
+                                // If it's a Credit (জমা), there is no upper limit restriction
+                                if ($type === 'credit') {
+                                    return [];
+                                }
+
+                                // 1. Calculate cumulative credit from the database
+                                $totalCredit = \App\Models\Transaction::where('type', 'credit')->sum('amount');
+                                
+                                // 2. Calculate cumulative debit already spent
+                                $totalDebit = \App\Models\Transaction::where('type', 'debit')->sum('amount');
+                                
+                                // 3. Current Available Cash in Hand
+                                $availableBalance = $totalCredit - $totalDebit;
+
+                                // Force maximum limit to match the remaining balance
+                                return [
+                                    'max:' . $availableBalance,
+                                ];
+                            })
+                            // Dynamic error message for the user in Bangla
+                            ->validationMessages([
+                                'max' => 'আপনার ক্যাশে পর্যাপ্ত টাকা নেই! বর্তমান সর্বোচ্চ ব্যালেন্স: ৳:max',
+                            ])
                             ->columnSpan(['default' => 12, 'md' => 6]),
 
                         Forms\Components\TextInput::make('note')
