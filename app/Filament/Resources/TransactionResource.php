@@ -64,6 +64,7 @@ class TransactionResource extends Resource
                             ->options(function (Forms\Get $get) {
                                 $selectedType = $get('type') ?? 'credit';
                                 
+                                // --- খরচ (DEBIT) মোড ---
                                 if ($selectedType === 'debit') {
                                     $debitCategories = Category::where('type', 'debit')->get();
                                     $debitOptions = [];
@@ -73,34 +74,40 @@ class TransactionResource extends Resource
                                     return $debitOptions;
                                 }
 
+                                // --- জমা (CREDIT) মোড ---
                                 $standardCredits = Category::where('type', 'credit')->pluck('name', 'id')->toArray();
                                 $stockDebits = Category::where('type', 'debit')->where('is_stock', true)->get();
 
                                 $salesOptions = [];
                                 foreach ($stockDebits as $cat) {
-                                    // যদি ডাটাবেজে এখনো quantity কলামটি তৈরি না হয়ে থাকে, তবে ক্র্যাশ এড়াতে স্কিপ করবে
-                                    if (!\Schema::hasColumn('transactions', 'quantity')) {
-                                        continue;
-                                    }
+                                    // 📦 stock_items টেবিলের সাথে JOIN করে প্রকৃত মোট ক্রয় হিসাব (Debit)
+                                    $totalPurchased = (float) \DB::table('transactions')
+                                        ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
+                                        ->where('transactions.category_id', $cat->id)
+                                        ->where('transactions.type', 'debit')
+                                        ->sum('stock_items.quantity');
 
-                                    // ১. এই ক্যাটাগরির মোট ক্রয় হিসাব (Debit)
-                                    $totalPurchased = \App\Models\Transaction::where('category_id', $cat->id)
-                                        ->where('type', 'debit')
-                                        ->sum('quantity');
+                                    // 📦 stock_items টেবিলের সাথে JOIN করে প্রকৃত মোট বিক্রয় হিসাব (Credit)
+                                    $totalSold = (float) \DB::table('transactions')
+                                        ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
+                                        ->where('transactions.category_id', $cat->id)
+                                        ->where('transactions.type', 'credit')
+                                        ->sum('stock_items.quantity');
 
-                                    // ২. এই ক্যাটাগরির মোট বিক্রয় হিসাব (Credit)
-                                    $totalSold = \App\Models\Transaction::where('category_id', $cat->id)
-                                        ->where('type', 'credit')
-                                        ->sum('quantity');
-
-                                    // ৩. বর্তমান প্রকৃত মজুদ হিসাব
                                     $currentStock = $totalPurchased - $totalSold;
 
-                                    // 🔥 কন্ডিশন: মজুদ যদি শুধুমাত্র ০ থেকে বেশি হয়, তবেই লিস্টে দেখাবে (যেমন: Maize দেখাবে, Wheat লুকানো থাকবে)
+                                    // 🔥 শর্ত: গুদামে মাল ০ থেকে বেশি থাকলেই কেবল বিক্রয়ের জন্য অপশনটি আসবে
                                     if ($currentStock > 0) {
-                                        // সুন্দরভাবে পরিমাপের একক দেখানোর জন্য শেষ ট্রানজেকশন থেকে এককটি খুঁজে নেওয়া
-                                        $lastTx = \App\Models\Transaction::where('category_id', $cat->id)->latest()->first();
-                                        $unitLabel = $lastTx && $lastTx->unit ? $lastTx->unit->name : 'একক';
+                                        // সর্বশেষ এন্ট্রি করা এককটি খুঁজে বের করা
+                                        $lastStockItem = \DB::table('transactions')
+                                            ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
+                                            ->join('units', 'stock_items.unit_id', '=', 'units.id')
+                                            ->where('transactions.category_id', $cat->id)
+                                            ->select('units.name')
+                                            ->latest('transactions.created_at')
+                                            ->first();
+
+                                        $unitLabel = $lastStockItem ? $lastStockItem->name : 'একক';
 
                                         $salesOptions[$cat->id] = $cat->name . ' - বিক্রয় (মজুদ: ' . number_format($currentStock) . ' ' . $unitLabel . ')';
                                     }
@@ -175,11 +182,11 @@ class TransactionResource extends Resource
                             ->columnSpan(['default' => 12, 'md' => 6]),
                     ])->columns(12),
 
-                // 🔥 COMPACT STOCKS SUB-FORM PANEL (With stock_type_id removed entirely)
+                // 🔥 STOCKS SUB-FORM PANEL
                 Forms\Components\Section::make(function (Forms\Get $get) {
                     return ($get('type') ?? 'credit') === 'debit' 
-                        ? '📦 স্টক / ইনভেন্টরি বিবরণী (ক্রয় / মাল প্রাপ্তি)' 
-                        : '📦 স্টক / ইনভেন্টরি বিবরণী (বিক্রয় / মাল খালাস)';
+                        ? '📦 স্টক / ইনভেন্টরি বিবরণী (ক্রয় / মাল প্রাপ্তি)' 
+                        : '📦 স্টক / ইনভেন্টরি বিবরণী (বিক্রয় / মাল খালাস)';
                 })
                     ->description('পণ্য পরিমাণ ও একক সংক্রান্ত অতিরিক্ত তথ্য এখানে পূরণ করুন।')
                     ->visible(function (Forms\Get $get) {
@@ -206,20 +213,31 @@ class TransactionResource extends Resource
                             ->label('মালের পরিমাণ')
                             ->numeric()
                             ->required()
-                            // 🔥 STRICT CEILING LIMIT ENFORCEMENT ON SALES
+                            // 🔥 stock_items ডাটা আর্কিটেকচার অনুযায়ী ভ্যালিডেশন সীমা নির্ধারণ
                             ->rules(function (Forms\Get $get) {
                                 if (($get('type') ?? 'credit') === 'debit') return [];
 
                                 $categoryId = $get('category_id');
                                 if (!$categoryId) return [];
 
-                                $totalPurchased = \App\Models\Transaction::where('category_id', $categoryId)->where('type', 'debit')->sum('quantity');
-                                $totalSold = \App\Models\Transaction::where('category_id', $categoryId)->where('type', 'credit')->sum('quantity');
+                                $totalPurchased = (float) \DB::table('transactions')
+                                    ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
+                                    ->where('transactions.category_id', $categoryId)
+                                    ->where('transactions.type', 'debit')
+                                    ->sum('stock_items.quantity');
+
+                                $totalSold = (float) \DB::table('transactions')
+                                    ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
+                                    ->where('transactions.category_id', $categoryId)
+                                    ->where('transactions.type', 'credit')
+                                    ->sum('stock_items.quantity');
                                 
-                                return ['max:' . ($totalPurchased - $totalSold)];
+                                $maxQuantity = $totalPurchased - $totalSold;
+
+                                return ['max:' . $maxQuantity];
                             })
                             ->validationMessages([
-                                'max' => 'গুদামে পর্যাপ্ত মাল নেই! সর্বোচ্চ বিক্রয়যোগ্য পরিমাণ: :max',
+                                'max' => 'গুদামে পর্যাপ্ত মাল নেই! সর্বোচ্চ বিক্রয়যোগ্য পরিমাণ: :max',
                             ])
                             ->columnSpan(['default' => 12, 'md' => 6]),
 
