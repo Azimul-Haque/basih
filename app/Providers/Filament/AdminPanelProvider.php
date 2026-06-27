@@ -37,7 +37,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
-                Dashboard::class,
+                Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
@@ -64,7 +64,7 @@ class AdminPanelProvider extends PanelProvider
     public function boot(): void
     {
         // 🔥 ডিফল্ট ড্যাশবোর্ডের নাম ও টাইটেল বাংলায় রূপান্তর
-        Dashboard::navigationLabel('ড্যাশবোর্ড');
-        Dashboard::title('ড্যাশবোর্ড');
+        Pages\Dashboard::navigationLabel('ড্যাশবোর্ড');
+        Pages\Dashboard::title('ড্যাশবোর্ড');
     }
 }
