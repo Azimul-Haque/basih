@@ -22,7 +22,14 @@ class EditTransaction extends EditRecord
     // 🔥 ADD THIS METHOD TO REDIRECT AFTER SAVING EDITS
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index');
+        $resource = static::getResource();
+
+        // 🔥 এডিট করার পরও টাইপ চেক করে সঠিক খাতায় ফেরত পাঠাবে
+        if ($this->record->type === 'credit') {
+            return $resource::getUrl('credits');
+        }
+
+        return $resource::getUrl('debits');
     }
 
     protected function afterSave(): void
