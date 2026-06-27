@@ -11,17 +11,17 @@ use Carbon\Carbon;
 class LedgerOverview extends BaseWidget
 {
     // লাইভ ডেটা রিফ্রেশ রেট (প্রতি ১৫ সেকেন্ডে ড্যাশবোর্ড অটো আপডেট হবে)
-        protected static ?string $pollingInterval = '15s';
+    protected static ?string $pollingInterval = '15s';
 
-        // উইজেটটিকে ফুল-উইডথ এরিয়া দেওয়া হলো
-        protected int | array | string $columnSpan = 'full';
+    // উইজেটটিকে ফুল-উইডথ এরিয়া দেওয়া হলো
+    protected int | array | string $columnSpan = 'full';
 
-        // 🔥 ম্যাজিক পার্ট: মোবাইলের জন্য ২ কলাম (Half-Half) এবং ডেস্কটপের জন্য ৩ কলাম লেআউট লক করা হলো
-        protected int | array | string $columns = [
-            'default' => 2, // মোবাইলে পাশাপাশি ২টি কার্ড দেখাবে
-            'md' => 3,      // মাঝারি স্ক্রিনে ৩টি
-            'lg' => 3,      // বড় ডেস্কটপ স্ক্রিনে ৩টি
-        ];
+    // 🔥 ম্যাজিক পার্ট: মোবাইলের জন্য ২ কলাম (Half-Half) এবং ডেস্কটপের জন্য ৩ কলাম লেআউট লক করা হলো
+    protected int | array | string $columns = [
+        'default' => 2, // মোবাইলে পাশাপাশি ২টি কার্ড দেখাবে
+        'md' => 3,      // মাঝারি স্ক্রিনে ৩টি
+        'lg' => 3,      // বড় ডেস্কটপ স্ক্রিনে ৩টি
+    ];
 
     protected function getStats(): array
     {
