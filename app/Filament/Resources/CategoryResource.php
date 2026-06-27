@@ -68,18 +68,42 @@ class CategoryResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\TextColumn::make('name')
+                        ->label('খাতের নাম')
+                        ->weight('bold')
+                        ->searchable()
+                        ->size('md'),
+                        
+                    Tables\Columns\TextColumn::make('type')
+                        ->label('ধরণ')
+                        ->badge()
+                        ->formatStateUsing(fn (string $state): string => $state === 'credit' ? 'জমা (Credit)' : 'খরচ (Debit)')
+                        ->color(fn (string $state): string => $state === 'credit' ? 'success' : 'danger')
+                        ->alignEnd(),
+                ]),
+                
+                // Displays a subtle sub-badge if the sector is flagged for inventory operations
+                Tables\Columns\Layout\Panel::make([
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('is_stock')
+                            ->formatStateUsing(fn ($state) => $state ? '📦 স্টক ট্র্যাকিং সচল' : '')
+                            ->color('warning')
+                            ->size('sm'),
+                    ]),
+                ])->collapsible()
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('type')
+                    ->label('ধরণ অনুযায়ী খুঁজুন')
+                    ->options([
+                        'credit' => 'জমা (Credit)',
+                        'debit' => 'খরচ (Debit)',
+                    ]),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\EditAction::make()->iconButton(),
+                Tables\Actions\DeleteAction::make()->iconButton(),
             ]);
     }
 
