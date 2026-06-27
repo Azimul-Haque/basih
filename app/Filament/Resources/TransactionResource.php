@@ -29,6 +29,12 @@ class TransactionResource extends Resource
     protected static ?string $modelLabel = 'লেনদেন';
     protected static ?string $pluralModelLabel = 'লেনদেন খাতা';
 
+    // 🔥 সাইডবারে প্যারেন্ট হিসেবে বা চাইল্ড ট্র্যাকিং সচল রাখতে এটি নিশ্চিত করুন
+    protected static bool $shouldRegisterNavigation = true; 
+
+    // সাইডবারের মূল গ্রুপের নাম (ঐচ্ছিক - দিলে দেখতে সুন্দর লাগবে)
+    protected static ?string $navigationGroup = 'হিসাব খাতা';
+
     public static function form(Form $form): Form
     {
         return $form
