@@ -119,7 +119,16 @@ class TransactionResource extends Resource
                             ->preload()
                             ->required()
                             ->createOptionForm([
-                                Forms\Components\TextInput::make('name')->label('নতুন একক')->required(),
+                                Forms\Components\TextInput::make('name')
+                                    ->label('নতুন খাতের নাম')
+                                    ->required(),
+                                    
+                                // We look up the parent form state dynamically using a fallback function closure
+                                Forms\Components\Hidden::make('type')
+                                    ->default(function (Forms\Get $get) {
+                                        // This reliably grabs the active type selected in the main form frame
+                                        return $get('type'); 
+                                    }),
                             ])
                             ->createOptionUsing(fn (array $data) => Unit::create($data)->id)
                             ->columnSpan(['default' => 12, 'md' => 4]),
