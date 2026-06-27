@@ -21,6 +21,7 @@ class CategoryResource extends Resource
     protected static ?string $model = Category::class;
     protected static ?string $navigationIcon = 'heroicon-o-tag';
     protected static ?string $navigationLabel = 'জমা-খরচের ধরণ';
+    protected static ?int $navigationSort = 3;
     protected static ?string $modelLabel = 'ক্যাটাগরি/খাত';
     protected static ?string $pluralModelLabel = 'জমা-খরচের ধরণ';
 
