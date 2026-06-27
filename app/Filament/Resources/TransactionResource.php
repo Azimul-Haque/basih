@@ -157,23 +157,46 @@ class TransactionResource extends Resource
                             ->numeric()
                             ->prefix('৳')
                             ->required()
-                            ->hint(function (Forms\Get $get) {
+                            ->hint(function (Forms\Get $get, $record) {
                                 if (($get('type') ?? 'credit') !== 'debit') return null;
 
+                                // ১. মোট জমা (Credit) অ্যামাউন্ট
                                 $totalCredit = \App\Models\Transaction::where('type', 'credit')->sum('amount');
-                                $totalDebit = \App\Models\Transaction::where('type', 'debit')->sum('amount');
-                                return 'বর্তমান ব্যবহার্য ব্যালেন্স: ৳' . number_format($totalCredit - $totalDebit);
+                                
+                                // ২. মোট সাধারণ খরচ (Debit Amount)
+                                $totalDebitAmount = \App\Models\Transaction::where('type', 'debit')->sum('amount');
+                                
+                                // ৩. 📦 স্টক আইটেম টেবিল থেকে মোট অতিরিক্ত খরচ (Extra Cost)
+                                $totalExtraCost = \DB::table('stock_items')->sum('extra_cost');
+
+                                // ৪. প্রকৃত ব্যবহারযোগ্য ব্যালেন্স = মোট জমা - (মোট খরচ + মোট অতিরিক্ত খরচ)
+                                $currentBalance = $totalCredit - ($totalDebitAmount + $totalExtraCost);
+
+                                // এডিট পেজে থাকলে বর্তমান রেকর্ডের নিজের অ্যামাউন্টটুকু ব্যালেন্সে ব্যাকপাস করতে হবে যেন এটি ভ্যালিডেশনে আটকে না যায়
+                                if ($record) {
+                                    $currentBalance += (float) $record->amount;
+                                }
+
+                                return 'বর্তমান ব্যবহার্য ব্যালেন্স: ৳' . number_format($currentBalance);
                             })
                             ->hintColor('warning') 
-                            ->rules(function (Forms\Get $get) {
+                            ->rules(function (Forms\Get $get, $record) {
                                 if (($get('type') ?? 'credit') === 'credit') return [];
 
                                 $totalCredit = \App\Models\Transaction::where('type', 'credit')->sum('amount');
-                                $totalDebit = \App\Models\Transaction::where('type', 'debit')->sum('amount');
-                                return ['max:' . ($totalCredit - $totalDebit)];
+                                $totalDebitAmount = \App\Models\Transaction::where('type', 'debit')->sum('amount');
+                                $totalExtraCost = \DB::table('stock_items')->sum('extra_cost');
+
+                                $currentBalance = $totalCredit - ($totalDebitAmount + $totalExtraCost);
+
+                                if ($record) {
+                                    $currentBalance += (float) $record->amount;
+                                }
+
+                                return ['max:' . $currentBalance];
                             })
                             ->validationMessages([
-                                'max' => 'আপনার ক্যাশে পর্যাপ্ত টাকা নেই! বর্তমান সর্বোচ্চ ব্যালেন্স: ৳:max',
+                                'max' => 'আপনার ক্যাশে পর্যাপ্ত টাকা নেই! বর্তমান সর্বোচ্চ ব্যবহার্য ব্যালেন্স: ৳:max',
                             ])
                             ->columnSpan(['default' => 12, 'md' => 6]),
 
