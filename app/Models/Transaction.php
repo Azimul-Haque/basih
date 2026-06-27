@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+use Illuminate\Support\Facades\DB;
+
 class Transaction extends Model
 {
     protected $fillable = ['category_id', 'date', 'type', 'amount', 'note'];
