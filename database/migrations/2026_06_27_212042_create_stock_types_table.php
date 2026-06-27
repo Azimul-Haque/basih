@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('stock_types', function (Blueprint $table) {
             $table->id();
+            $table->string('name'); // ভুট্টা, গম, ধান
             $table->timestamps();
         });
     }
