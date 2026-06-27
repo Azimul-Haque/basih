@@ -217,113 +217,113 @@ class TransactionResource extends Resource
                         : '📦 স্টক / ইনভেন্টরি বিবরণী (বিক্রয় / মাল খালাস)';
                 })
                     ->description('পণ্য পরিমাণ ও একক সংক্রান্ত অতিরিক্ত তথ্য এখানে পূরণ করুন।')
-                        ->relationship('stockItem') 
-                        ->visible(function (Forms\Get $get) {
-                            $categoryId = $get('category_id');
-                            if (!$categoryId) return false;
-                            
-                            $category = \App\Models\Category::find($categoryId);
-                            return $category && $category->is_stock;
-                        })
-                        ->schema([
-                            // ১. পরিমাপের একক
-                            Forms\Components\Select::make('unit_id')
-                                ->label('পরিমাপের একক')
-                                ->options(\App\Models\Unit::pluck('name', 'id'))
-                                ->searchable()
-                                ->preload()
-                                ->required()
-                                ->createOptionForm([
-                                    Forms\Components\TextInput::make('name')->label('নতুন পরিমাপের একক')->required(),
-                                ])
-                                ->createOptionUsing(fn (array $data) => \App\Models\Unit::create($data)->id)
-                                ->columnSpan(['default' => 12, 'md' => 6]),
+                    ->relationship('stockItem') 
+                    ->visible(function (Forms\Get $get) {
+                        $categoryId = $get('category_id');
+                        if (!$categoryId) return false;
+                        
+                        $category = \App\Models\Category::find($categoryId);
+                        return $category && $category->is_stock;
+                    })
+                    ->schema([
+                        // ১. পরিমাপের একক
+                        Forms\Components\Select::make('unit_id')
+                            ->label('পরিমাপের একক')
+                            ->options(\App\Models\Unit::pluck('name', 'id'))
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->createOptionForm([
+                                Forms\Components\TextInput::make('name')->label('নতুন পরিমাপের একক')->required(),
+                            ])
+                            ->createOptionUsing(fn (array $data) => \App\Models\Unit::create($data)->id)
+                            ->columnSpan(['default' => 12, 'md' => 6]),
 
-                            // ২. মালের পরিমাণ (ডাইনামিক আপার লিমিট এবং লাইভ স্টক হিন্টসহ)
-                            Forms\Components\TextInput::make('quantity')
-                                ->label('মালের পরিমাণ')
-                                ->numeric()
-                                ->required()
-                                ->hint(function (Forms\Get $get, $record) {
-                                    // প্যারেন্ট ফর্মের ডাটা রিড করা
-                                    $livewireData = $get('../../') ?? []; 
-                                    $type = data_get($livewireData, 'type') ?? 'credit';
-                                    $categoryId = data_get($livewireData, 'category_id');
+                        // ২. মালের পরিমাণ (ডাইনামিক আপার লিমিট এবং লাইভ স্টক হিন্টসহ)
+                        Forms\Components\TextInput::make('quantity')
+                            ->label('মালের পরিমাণ')
+                            ->numeric()
+                            ->required()
+                            ->hint(function (Forms\Get $get, $record) {
+                                // প্যারেন্ট ফর্মের ডাটা রিড করা
+                                $livewireData = $get('../../') ?? []; 
+                                $type = data_get($livewireData, 'type') ?? 'credit';
+                                $categoryId = data_get($livewireData, 'category_id');
 
-                                    if (!$categoryId) return null;
+                                if (!$categoryId) return null;
 
-                                    // গুদামে মোট কত কেনা হয়েছে
-                                    $totalPurchased = (float) \DB::table('transactions')
-                                        ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
-                                        ->where('transactions.category_id', $categoryId)
-                                        ->where('transactions.type', 'debit')
-                                        ->sum('stock_items.quantity');
+                                // গুদামে মোট কত কেনা হয়েছে
+                                $totalPurchased = (float) \DB::table('transactions')
+                                    ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
+                                    ->where('transactions.category_id', $categoryId)
+                                    ->where('transactions.type', 'debit')
+                                    ->sum('stock_items.quantity');
 
-                                    // গুদাম থেকে মোট কত বিক্রি হয়েছে
-                                    $totalSold = (float) \DB::table('transactions')
-                                        ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
-                                        ->where('transactions.category_id', $categoryId)
-                                        ->where('transactions.type', 'credit')
-                                        ->sum('stock_items.quantity');
-                                    
-                                    // বর্তমান গুদাম স্টক
-                                    $availableStock = $totalPurchased - $totalSold;
+                                // গুদাম থেকে মোট কত বিক্রি হয়েছে
+                                $totalSold = (float) \DB::table('transactions')
+                                    ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
+                                    ->where('transactions.category_id', $categoryId)
+                                    ->where('transactions.type', 'credit')
+                                    ->sum('stock_items.quantity');
+                                
+                                // বর্তমান গুদাম স্টক
+                                $availableStock = $totalPurchased - $totalSold;
 
-                                    // এডিট পেজে থাকলে বর্তমান রেকর্ডের নিজের পরিমাণটুকু স্টকে ফেরত যোগ করতে হবে
-                                    if ($record && $record->stockItem) {
-                                        $availableStock += (float) $record->stockItem->quantity;
-                                    }
+                                // এডিট পেজে থাকলে বর্তমান রেকর্ডের নিজের পরিমাণটুকু স্টকে ফেরত যোগ করতে হবে
+                                if ($record && $record->stockItem) {
+                                    $availableStock += (float) $record->stockItem->quantity;
+                                }
 
-                                    // যদি বিক্রয় মোড হয়, তবে সর্বোচ্চ বিক্রয়সীমা দেখাবে
-                                    if ($type === 'credit') {
-                                        return '⚠️ গুদামে অবশিষ্ট আছে: ' . number_format($availableStock);
-                                    }
+                                // যদি বিক্রয় মোড হয়, তবে সর্বোচ্চ বিক্রয়সীমা দেখাবে
+                                if ($type === 'credit') {
+                                    return '⚠️ গুদামে অবশিষ্ট আছে: ' . number_format($availableStock);
+                                }
 
-                                    return null;
-                                })
-                                ->hintColor('warning')
-                                ->rules(function (Forms\Get $get, $record) {
-                                    $livewireData = $get('../../') ?? []; 
-                                    $type = data_get($livewireData, 'type') ?? 'credit';
-                                    $categoryId = data_get($livewireData, 'category_id');
+                                return null;
+                            })
+                            ->hintColor('warning')
+                            ->rules(function (Forms\Get $get, $record) {
+                                $livewireData = $get('../../') ?? []; 
+                                $type = data_get($livewireData, 'type') ?? 'credit';
+                                $categoryId = data_get($livewireData, 'category_id');
 
-                                    // যদি ক্রয় (debit) মোড হয়, তবে কোনো সর্বোচ্চ সীমা নেই
-                                    if ($type === 'debit' || !$categoryId) return [];
+                                // যদি ক্রয় (debit) মোড হয়, তবে কোনো সর্বোচ্চ সীমা নেই
+                                if ($type === 'debit' || !$categoryId) return [];
 
-                                    $totalPurchased = (float) \DB::table('transactions')
-                                        ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
-                                        ->where('transactions.category_id', $categoryId)
-                                        ->where('transactions.type', 'debit')
-                                        ->sum('stock_items.quantity');
+                                $totalPurchased = (float) \DB::table('transactions')
+                                    ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
+                                    ->where('transactions.category_id', $categoryId)
+                                    ->where('transactions.type', 'debit')
+                                    ->sum('stock_items.quantity');
 
-                                    $totalSold = (float) \DB::table('transactions')
-                                        ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
-                                        ->where('transactions.category_id', $categoryId)
-                                        ->where('transactions.type', 'credit')
-                                        ->sum('stock_items.quantity');
-                                    
-                                    $availableStock = $totalPurchased - $totalSold;
+                                $totalSold = (float) \DB::table('transactions')
+                                    ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
+                                    ->where('transactions.category_id', $categoryId)
+                                    ->where('transactions.type', 'credit')
+                                    ->sum('stock_items.quantity');
+                                
+                                $availableStock = $totalPurchased - $totalSold;
 
-                                    if ($record && $record->stockItem) {
-                                        $availableStock += (float) $record->stockItem->quantity;
-                                    }
+                                if ($record && $record->stockItem) {
+                                    $availableStock += (float) $record->stockItem->quantity;
+                                }
 
-                                    return ['max:' . $availableStock];
-                                })
-                                ->validationMessages([
-                                    'max' => 'গুদামে পর্যাপ্ত মাল নেই! আপনার সর্বোচ্চ বিক্রয়যোগ্য পরিমাণ: :max',
-                                ])
-                                ->columnSpan(['default' => 12, 'md' => 6]),
+                                return ['max:' . $availableStock];
+                            })
+                            ->validationMessages([
+                                'max' => 'গুদামে পর্যাপ্ত মাল নেই! আপনার সর্বোচ্চ বিক্রয়যোগ্য পরিমাণ: :max',
+                            ])
+                            ->columnSpan(['default' => 12, 'md' => 6]),
 
-                            // ৩. অতিরিক্ত খরচ (পরিবহন/লেবার) -> শুধুমাত্র Debit মোডে দেখাবে, Credit মোডে পুরোপুরি লুকানো থাকবে
-                            Forms\Components\TextInput::make('extra_cost')
-                                ->label('অতিরিক্ত খরচ (পরিবহন/লেবার)')
-                                ->numeric()
-                                ->prefix('৳')
-                                ->default(0)
-                                ->hidden(fn (Forms\Get $get) => ($get('../../type') ?? 'credit') === 'credit') // 🔥 ক্রেডিট হলে হিডেন
-                                ->columnSpan(12),
-                        ])->columns(12)
+                        // ৩. অতিরিক্ত খরচ (পরিবহন/লেবার) -> শুধুমাত্র Debit মোডে দেখাবে, Credit মোডে পুরোপুরি লুকানো থাকবে
+                        Forms\Components\TextInput::make('extra_cost')
+                            ->label('অতিরিক্ত খরচ (পরিবহন/লেবার)')
+                            ->numeric()
+                            ->prefix('৳')
+                            ->default(0)
+                            ->hidden(fn (Forms\Get $get) => ($get('../../type') ?? 'credit') === 'credit') // 🔥 ক্রেডিট হলে হিডেন
+                            ->columnSpan(12),
+                    ])->columns(12)
             ]);
     }
 
