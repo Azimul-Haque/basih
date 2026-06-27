@@ -399,6 +399,8 @@ class TransactionResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            // 🚀 পারফরম্যান্স অপ্টিমাইজেশন: ডাটাবেজ কুয়েরি N+1 ক্র্যাশ এড়াতে ইগার লোডিং (Eager Loading)
+            ->relationship(fn () => \App\Models\Transaction::with(['category', 'stockItem.unit']))
             ->columns([
                 Tables\Columns\Layout\Split::make([
                     // বাম পাশের ব্লক: তারিখ, খাতের নাম এবং স্টক বিবরণী একসাথে স্ট্যাকড
@@ -407,33 +409,30 @@ class TransactionResource extends Resource
                             ->date('d M, Y')
                             ->label('তারিখ')
                             ->color('gray')
-                            ->size('sm'),
+                            ->size('sm')
+                            ->sortable(), // 🔥 তারিখ অনুযায়ী টেবিল সর্ট করার সুবিধা
 
                         Tables\Columns\TextColumn::make('category.name')
                             ->label('খাত')
                             ->weight('bold')
                             ->searchable()
-                            ->size('md'),
+                            ->size('md')
+                            ->sortable(), // 🔥 খাত/ক্যাটাগরি অনুযায়ী টেবিল সর্ট করার সুবিধা
 
-                        // 🔥 নতুন: যদি ক্যাটাগরি স্টকের হয়, তবেই মালের পরিমাণ ও একক লাইভ দেখাবে
+                        // যদি ক্যাটাগরি স্টকের হয়, তবেই মালের পরিমাণ ও একক লাইভ দেখাবে
                         Tables\Columns\TextColumn::make('stockItem.quantity')
                             ->label('স্টক বিবরণী')
                             ->formatStateUsing(function ($state, $record) {
-                                // 🔥 $record null হলে বা ক্যাটাগরি না থাকলে ক্র্যাশ এড়াতে সেফটি চেক
                                 if (!$record || !$record->category || !$record->category->is_stock || !$record->stockItem) {
                                     return null;
                                 }
                                 
                                 $qty = number_format($record->stockItem->quantity);
                                 $unit = $record->stockItem->unit ? $record->stockItem->unit->name : 'একক';
-                                
-                                // 💰 প্রতি এককের দাম (Unit Price) বের করা
                                 $unitPrice = number_format($record->stockItem->unit_price, 2);
                                 
-                                // প্রধান টেক্সট: পরিমাণ এবং প্রতি এককের দর
                                 $text = "📦 পরিমাণ: {$qty} {$unit} (দর: ৳{$unitPrice}/{$unit})";
 
-                                // যদি ক্রয় (debit) মোড হয় এবং অতিরিক্ত খরচ থাকে, তবে সেটিও পাশে দেখাবে
                                 if ($record->type === 'debit' && $record->stockItem->extra_cost > 0) {
                                     $extra = number_format($record->stockItem->extra_cost);
                                     $text .= " (+ ৳{$extra} গাড়ি/লেবার)";
@@ -446,27 +445,25 @@ class TransactionResource extends Resource
                             ->visible(fn ($record) => $record && $record->category && $record->category->is_stock && $record->stockItem),
                     ]),
                     
-                    // ডান পাশের ব্লক: ক্রেডিট/ডেবিট অনুযায়ী ডাইনামিক কালার অ্যামাউন্ট ব্যাজ
+                    // ডান পাশের ব্লক: ক্রেডিট/ডেবিট অনুযায়ী ডাইনামিক কালার অ্যামাউন্ট ব্যাজ
                     Tables\Columns\TextColumn::make('amount')
                         ->label('টাকার পরিমাণ')
-                        ->money('BDT', divideBy: 1)
+                        ->money('BDT')
                         ->formatStateUsing(function ($state, $record) {
                             $amount = (float) $state;
-                            
-                            // 🔥 যদি খরচ (debit) এবং স্টক ট্রানজেকশন হয়, তবে লাইভ অতিরিক্ত খরচ যোগ করে মোট টাকা দেখাবে
                             if ($record->type === 'debit' && $record->category && $record->category->is_stock && $record->stockItem) {
                                 $amount += (float) $record->stockItem->extra_cost;
                             }
-                            
-                            return $amount;
+                            return number_format($amount, 2);
                         })
                         ->prefix(fn ($record) => $record->type === 'credit' ? '+ ৳' : '- ৳')
                         ->color(fn ($record) => $record->type === 'credit' ? 'success' : 'danger')
                         ->weight('bold')
-                        ->alignEnd(),
+                        ->alignEnd()
+                        ->sortable(), // 🔥 টাকার অংক অনুযায়ী সর্ট করার সুবিধা
                 ]),
                 
-                // 🔥 ডাইনামিক কলাপসিবল প্যানেল: মন্তব্য থাকলেই কেবল ড্রপডাউন অ্যারো বাটন ও প্যানেল আসবে
+                // ডাইনামিক কলাপসিবল প্যানেল: মন্তব্য থাকলেই কেবল ড্রপডাউন অ্যারো বাটন ও প্যানেল আসবে
                 Tables\Columns\Layout\Panel::make([
                     Tables\Columns\Layout\Stack::make([
                         Tables\Columns\TextColumn::make('note')
@@ -476,15 +473,21 @@ class TransactionResource extends Resource
                     ]),
                 ])
                 ->collapsible()
-                // মন্তব্য ফাঁকা হলে কলাপসিবল মেকানিজম হাইড করে দেবে
                 ->visible(fn ($record) => $record && !empty($record->note)),
             ])
             ->filters([
-                // ডেট রেঞ্জ ফিল্টার (মাসিক বা নির্দিষ্ট মেয়াদের হিসাব দেখার জন্য)
+                // 🔥 ফিল্টার ১: খাত/ক্যাটাগরি ফিল্টার ড্রপডাউন
+                Tables\Filters\SelectFilter::make('category_id')
+                    ->label('খাত অনুযায়ী ফিল্টার')
+                    ->options(\App\Models\Category::pluck('name', 'id'))
+                    ->searchable()
+                    ->preload(),
+
+                // 🔥 ফিল্টার ২: ডেট রেঞ্চ ফিল্টার (মাসিক বা নির্দিষ্ট মেয়াদের হিসাব)
                 Tables\Filters\Filter::make('date')
                     ->form([
-                        Forms\Components\DatePicker::make('from')->label('শুরুর তারিখ'),
-                        Forms\Components\DatePicker::make('until')->label('শেষের তারিখ'),
+                        \Filament\Forms\Components\DatePicker::make('from')->label('শুরুর তারিখ'),
+                        \Filament\Forms\Components\DatePicker::make('until')->label('শেষের তারিখ'),
                     ])
                     ->query(function ($query, array $data) {
                         return $query
@@ -492,6 +495,11 @@ class TransactionResource extends Resource
                             ->when($data['until'], fn ($q) => $q->whereDate('date', '<=', $data['until']));
                     })
             ])
+            ->filtersTriggerAction(
+                fn (\Filament\Tables\Actions\Action $action) => $action
+                    ->button()
+                    ->label('ফিল্টার ও অনুসন্ধান') // ফিল্টার ট্রিগার বাটনটি দেখতে প্রফেশনাল লাগবে
+            )
             ->actions([
                 Tables\Actions\EditAction::make()->iconButton(),
                 Tables\Actions\DeleteAction::make()->iconButton(),
