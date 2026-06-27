@@ -14,6 +14,13 @@ class CreateTransaction extends CreateRecord
 
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index');
+        $resource = static::getResource();
+
+        // 🔥 লেনদেনের ধরণ অনুযায়ী নির্দিষ্ট পাতায় রিডাইরেক্ট হবে
+        if ($this->record->type === 'credit') {
+            return $resource::getUrl('credits');
+        }
+
+        return $resource::getUrl('debits');
     }
 }
