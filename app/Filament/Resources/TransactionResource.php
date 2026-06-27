@@ -209,11 +209,10 @@ class TransactionResource extends Resource
                             ->createOptionUsing(fn (array $data) => \App\Models\Unit::create($data)->id)
                             ->columnSpan(['default' => 12, 'md' => 6]),
 
-                        Forms\Components\TextInput::make('quantity')
+                        Forms\Components\TextInput::make('stockItem.quantity') // <--- রিলেশনশিপ ডট নোটেশন
                             ->label('মালের পরিমাণ')
                             ->numeric()
                             ->required()
-                            // 🔥 stock_items ডাটা আর্কিটেকচার অনুযায়ী ভ্যালিডেশন সীমা নির্ধারণ
                             ->rules(function (Forms\Get $get) {
                                 if (($get('type') ?? 'credit') === 'debit') return [];
 
