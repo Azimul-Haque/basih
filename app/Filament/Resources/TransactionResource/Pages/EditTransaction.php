@@ -30,35 +30,27 @@ class EditTransaction extends EditRecord
         $record = $this->record;
         $formData = $this->form->getRawState();
 
-        $quantity = (float) (data_get($formData, 'stockItem.quantity') ?? $formData['quantity'] ?? 0);
-        $extraCost = (float) (data_get($formData, 'stockItem.extra_cost') ?? $formData['extra_cost'] ?? 0);
+        $stockData = data_get($formData, 'stockItem', []);
+        $quantity = (float) (data_get($stockData, 'quantity') ?? 0);
+        $extraCost = (float) (data_get($stockData, 'extra_cost') ?? 0);
         $baseAmount = (float) ($formData['amount'] ?? 0);
 
         $category = Category::find($formData['category_id'] ?? null);
 
         if ($category && $category->is_stock) {
-            
-            // 🔥 এডিটের সময়ও বেস অ্যামাউন্ট + অতিরিক্ত খরচ যোগ করা
             $finalAmount = $baseAmount + $extraCost;
 
-            $record->update([
-                'amount' => $finalAmount
-            ]);
-
+            $record->update(['amount' => $finalAmount]);
             $unitPrice = $quantity > 0 ? ($finalAmount / $quantity) : 0;
 
-            DB::table('stock_items')->updateOrInsert(
-                ['transaction_id' => $record->id],
-                [
-                    'unit_id'    => data_get($formData, 'stockItem.unit_id') ?? $formData['unit_id'] ?? null,
-                    'quantity'   => $quantity,
+            \DB::table('stock_items')
+                ->where('transaction_id', $record->id)
+                ->update([
                     'unit_price' => $unitPrice,
-                    'extra_cost' => $extraCost,
                     'updated_at' => now(),
-                ]
-            );
+                ]);
         } else {
-            DB::table('stock_items')->where('transaction_id', $record->id)->delete();
+            \DB::table('stock_items')->where('transaction_id', $record->id)->delete();
         }
     }
 }
