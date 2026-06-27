@@ -268,6 +268,63 @@ class TransactionResource extends Resource
                             ->createOptionUsing(fn (array $data) => \App\Models\Unit::create($data)->id)
                             ->columnSpan(['default' => 12, 'md' => 6]),
 
+                        // 🔥 ১. যদি বিক্রয় (Credit) মোড হয়, তবে এটি শুধু ভ্যালুটি চমৎকারভাবে স্ক্রিনে দেখাবে (Uneditable)
+                        Forms\Components\Placeholder::make('unit_name_placeholder')
+                            ->label('পরিমাপের একক')
+                            ->content(function (Forms\Get $get) {
+                                $categoryId = $get('../../category_id') ?? $get('../category_id');
+                                if (!$categoryId) return 'খাত নির্বাচন করুন...';
+
+                                $lastStockItem = \DB::table('stock_items')
+                                    ->join('transactions', 'stock_items.transaction_id', '=', 'transactions.id')
+                                    ->where('transactions.category_id', $categoryId)
+                                    ->where('transactions.type', 'debit')
+                                    ->orderBy('transactions.date', 'desc')
+                                    ->orderBy('transactions.id', 'desc')
+                                    ->first();
+
+                                if ($lastStockItem) {
+                                    return \App\Models\Unit::find($lastStockItem->unit_id)?->name ?? 'N/A';
+                                }
+
+                                return 'কোনো একক পাওয়া যায়নি (আগে কিনুন)';
+                            })
+                            ->visible(fn (Forms\Get $get) => ($get('../../type') ?? $get('../type') ?? 'credit') === 'credit')
+                            ->columnSpan(['default' => 12, 'md' => 6]),
+
+                        // 🔥 ২. ব্যাকএন্ডে ডাটাবেজে unit_id পাঠানোর জন্য হিডেন ফিল্ড (শুধুমাত্র বিক্রয় মোডে সচল)
+                        Forms\Components\Hidden::make('unit_id')
+                            ->default(function (Forms\Get $get) {
+                                $categoryId = $get('../../category_id') ?? $get('../category_id');
+                                if (!$categoryId) return null;
+
+                                $lastStockItem = \DB::table('stock_items')
+                                    ->join('transactions', 'stock_items.transaction_id', '=', 'transactions.id')
+                                    ->where('transactions.category_id', $categoryId)
+                                    ->where('transactions.type', 'debit')
+                                    ->orderBy('transactions.date', 'desc')
+                                    ->orderBy('transactions.id', 'desc')
+                                    ->first();
+
+                                return $lastStockItem ? $lastStockItem->unit_id : null;
+                            })
+                            ->disabled(fn (Forms\Get $get) => ($get('../../type') ?? $get('../type') ?? 'credit') === 'debit') // ডেবিট হলে এটি বন্ধ থাকবে
+                            ->dehydrated(),
+
+                        // 🔥 ৩. আসল ড্রপডাউন সিলেক্টর (এটি শুধুমাত্র ক্রয়/Debit মোডে দৃশ্যমান ও এডিটেবল হবে)
+                        Forms\Components\Select::make('unit_id')
+                            ->label('পরিমাপের একক')
+                            ->options(\App\Models\Unit::pluck('name', 'id'))
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->visible(fn (Forms\Get $get) => ($get('../../type') ?? $get('../type') ?? 'credit') === 'debit') // শুধুমাত্র ক্রয় মোডে দেখাবে
+                            ->createOptionForm([
+                                Forms\Components\TextInput::make('name')->label('নতুন পরিমাপের একক')->required(),
+                            ])
+                            ->createOptionUsing(fn (array $data) => \App\Models\Unit::create($data)->id)
+                            ->columnSpan(['default' => 12, 'md' => 6]),
+
                         // ২. মালের পরিমাণ (ডাইনামিক আপার লিমিট এবং লাইভ স্টক হিন্টসহ)
                         Forms\Components\TextInput::make('quantity')
                             ->label('মালের পরিমাণ')
