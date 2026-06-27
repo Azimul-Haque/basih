@@ -80,36 +80,31 @@ class TransactionResource extends Resource
 
                                 return $standardCredits + $salesOptions;
                             })
-                            // 🔥 FIXED: Returns null when Credit is selected, hiding the "+" button completely
-                            ->createOptionForm(function (Forms\Get $get) {
-                                if ($get('type') === 'credit') {
-                                    return null; 
-                                }
-
-                                return [
-                                    Forms\Components\TextInput::make('name')
-                                        ->label('নতুন খাতের নাম')
-                                        ->required()
-                                        ->unique(
-                                            table: 'categories',
-                                            column: 'name',
-                                            modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Forms\Components\TextInput $component) {
-                                                $livewireData = $component->getLivewire()->data;
-                                                $parentType = $livewireData['type'] ?? 'credit';
-                                                return $rule->where('type', $parentType);
-                                            }
-                                        ),
-
-                                    Forms\Components\Toggle::make('is_stock')
-                                        ->label('এটি কি স্টকের খাত?')
-                                        ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের ধরণ ও একক এন্ট্রি করতে হবে।')
-                                        ->default(false)
-                                        ->visible(function (Forms\Components\Toggle $component) {
+                            // 🔥 ALWAYS ENABLED: Returns the form array for both types dynamically
+                            ->createOptionForm([
+                                Forms\Components\TextInput::make('name')
+                                    ->label('নতুন খাতের নাম')
+                                    ->required()
+                                    ->unique(
+                                        table: 'categories',
+                                        column: 'name',
+                                        modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Forms\Components\TextInput $component) {
                                             $livewireData = $component->getLivewire()->data;
-                                            return ($livewireData['type'] ?? 'credit') === 'debit';
-                                        }),
-                                ];
-                            })
+                                            $parentType = $livewireData['type'] ?? 'credit';
+                                            return $rule->where('type', $parentType);
+                                        }
+                                    ),
+
+                                Forms\Components\Toggle::make('is_stock')
+                                    ->label('এটি কি স্টকের খাত?')
+                                    ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের ধরণ ও একক এন্ট্রি করতে হবে।')
+                                    ->default(false)
+                                    // 🔥 THE GATEKEEPER: Only renders this toggle if the underlying page is on Debit
+                                    ->visible(function (Forms\Components\Toggle $component) {
+                                        $livewireData = $component->getLivewire()->data;
+                                        return ($livewireData['type'] ?? 'credit') === 'debit';
+                                    }),
+                            ])
                             ->createOptionUsing(function (array $data, Forms\Components\Select $component) {
                                 $livewireData = $component->getLivewire()->data;
                                 $parentType = $livewireData['type'] ?? 'credit';
@@ -117,7 +112,8 @@ class TransactionResource extends Resource
                                 $category = Category::create([
                                     'name' => $data['name'],
                                     'type' => $parentType, 
-                                    'is_stock' => $data['is_stock'] ?? false,
+                                    // Saves false naturally if the field was hidden (Credit context)
+                                    'is_stock' => $data['is_stock'] ?? false, 
                                 ]);
 
                                 return $category->id; 
