@@ -52,36 +52,23 @@ class TransactionResource extends Resource
                             ])
                             ->inline()
                             ->required()
-                            ->default('credit') // Hard-default ensures form loads with data
-                            ->live()            // Aggressively re-renders form when tapped
-                            ->afterStateUpdated(fn ($set) => $set('category_id', null))
+                            ->default('credit') // Auto-selects "জমা" on initial form render
+                            ->live()            // Re-triggers the option array block on click
+                            ->afterStateUpdated(fn ($set) => $set('category_id', null)) // Resets choice on toggle
                             ->columnSpan(['default' => 12, 'md' => 4]),
 
                         Forms\Components\Select::make('category_id')
                             ->label('খাত / ক্যাটাগরি')
                             ->required()
                             ->searchable()
-                            ->live() // Keeps field listening to container swaps
-                            // 🔥 THE DEFENSIVE OPTIONS FIX: Works independently of relationship lifecycle loops
+                            ->preload() // Safe to preload now since it's a fixed array lookup
+                            // 🔥 THE DIRECT ELOQUENT LOOKUP: Fetches straight from your entries table
                             ->options(function (Forms\Get $get) {
                                 $selectedType = $get('type') ?? 'credit';
                                 
-                                return Category::where('type', $selectedType)
+                                return \App\Models\Category::where('type', $selectedType)
                                     ->pluck('name', 'id')
                                     ->toArray();
-                            })
-                            ->createOptionForm([
-                                Forms\Components\TextInput::make('name')
-                                    ->label('নতুন খাতের নাম')
-                                    ->required(),
-                            ])
-                            ->createOptionUsing(function (array $data, Forms\Get $get) {
-                                $category = Category::create([
-                                    'name' => $data['name'],
-                                    'type' => $get('type') ?? 'credit',
-                                ]);
-
-                                return $category->id;
                             })
                             ->columnSpan(['default' => 12, 'md' => 4]),
 
@@ -97,40 +84,32 @@ class TransactionResource extends Resource
                             ->columnSpan(['default' => 12, 'md' => 6]),
                     ])->columns(12),
 
-                // 🔥 STOCKS SUB-FORM PANEL: Sliders open dynamically ONLY if the selected sector name contains "স্টক"
+                // 🔥 STOCKS SUB-FORM PANEL: Sliders open dynamically ONLY if the selected sector has "is_stock" enabled in the database
                 Forms\Components\Section::make('স্টক / ইনভেন্টরি বিবরণী')
                     ->description('পণ্য ক্রয় বা বিক্রয়ের অতিরিক্ত তথ্য এখানে পূরণ করুন।')
                     ->visible(function (Forms\Get $get) {
                         $categoryId = $get('category_id');
                         if (!$categoryId) return false;
-                        $category = Category::find($categoryId);
-                        return $category && (str_contains($category->name, 'স্টক') || str_contains($category->name, 'স্টকের'));
+                        
+                        // Look up the actual category model directly
+                        $category = \App\Models\Category::find($categoryId);
+                        return $category && $category->is_stock;
                     })
                     ->schema([
                         Forms\Components\Select::make('stock_type_id')
                             ->label('স্টকের ধরণ (পণ্যের নাম)')
-                            ->options(StockType::pluck('name', 'id'))
+                            ->options(\App\Models\StockType::pluck('name', 'id'))
                             ->searchable()
                             ->preload()
                             ->required()
-                            ->createOptionForm([
-                                Forms\Components\TextInput::make('name')->label('নতুন পণ্যের নাম')->required(),
-                            ])
-                            ->createOptionUsing(fn (array $data) => StockType::create($data)->id)
                             ->columnSpan(['default' => 12, 'md' => 4]),
 
                         Forms\Components\Select::make('unit_id')
                             ->label('পরিমাপের একক')
-                            ->options(Unit::pluck('name', 'id'))
+                            ->options(\App\Models\Unit::pluck('name', 'id'))
                             ->searchable()
                             ->preload()
                             ->required()
-                            ->createOptionForm([
-                                Forms\Components\TextInput::make('name')
-                                    ->label('নতুন পরিমাপের একক')
-                                    ->required(),
-                            ])
-                            ->createOptionUsing(fn (array $data) => Unit::create($data)->id)
                             ->columnSpan(['default' => 12, 'md' => 4]),
 
                         Forms\Components\TextInput::make('quantity')
