@@ -52,7 +52,7 @@ class TransactionResource extends Resource
                             ])
                             ->inline()
                             ->required()
-                            ->live() // Forces instant lifecycle re-hydration
+                            ->live() 
                             ->afterStateUpdated(fn ($set) => $set('category_id', null))
                             ->columnSpan(['default' => 12, 'md' => 4]),
 
@@ -61,11 +61,11 @@ class TransactionResource extends Resource
                             ->required()
                             ->searchable()
                             ->live()
-                            // 🔥 THE PERFECT LOOKUP FIX: Maps relationship directly and filters reactively by the selected type
+                            // 🔥 FIXED: Changed named parameter to modifyQueryUsing
                             ->relationship(
                                 name: 'category',
                                 titleAttribute: 'name',
-                                modifyRuleQueryUsing: fn (Forms\Get $get, $query) => $query
+                                modifyQueryUsing: fn (Forms\Get $get, $query) => $query
                                     ->where('type', $get('type') ?? 'credit')
                             )
                             ->createOptionForm([
@@ -73,7 +73,6 @@ class TransactionResource extends Resource
                                     ->label('নতুন খাতের নাম')
                                     ->required(),
                             ])
-                            // 🔥 THE COMPONENT SAVE FIX: Manually injects the selected type straight into creation
                             ->createOptionUsing(function (array $data, Forms\Get $get) {
                                 $category = Category::create([
                                     'name' => $data['name'],
