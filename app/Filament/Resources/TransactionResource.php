@@ -316,7 +316,7 @@ class TransactionResource extends Resource
                 ])
                 ->collapsible()
                 // মন্তব্য ফাঁকা হলে কলাপসিবল মেকানিজম হাইড করে দেবে
-                ->visible(fn ($record) => !empty($record->note)),
+                ->visible(fn ($record) => $record && !empty($record->note)),
             ])
             ->filters([
                 // ডেট রেঞ্জ ফিল্টার (মাসিক বা নির্দিষ্ট মেয়াদের হিসাব দেখার জন্য)
