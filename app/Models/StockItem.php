@@ -28,7 +28,6 @@ class StockItem extends Model
     }
 
     protected static function booted()
-    protected static function booted()
     {
         static::saving(function ($stockItem) {
             $quantity = (float) $stockItem->quantity;
