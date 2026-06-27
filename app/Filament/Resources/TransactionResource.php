@@ -74,9 +74,10 @@ class TransactionResource extends Resource
                                     ->unique(
                                         table: 'categories',
                                         column: 'name',
-                                        modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Forms\Get $get) {
-                                            // 🔥 LOOK UPWARDS: Grabs transaction type from background page for unique checks
-                                            $parentType = $get('../../type') ?? 'credit';
+                                        modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Forms\Components\TextInput $component) {
+                                            // 🔥 DIRECT LIVEWIRE STATE INTERACTION Bypassing Form Scoping Constraints
+                                            $livewireData = $component->getLivewire()->data;
+                                            $parentType = $livewireData['type'] ?? 'credit';
                                             return $rule->where('type', $parentType);
                                         }
                                     ),
@@ -85,12 +86,16 @@ class TransactionResource extends Resource
                                     ->label('এটি কি স্টকের খাত?')
                                     ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের ধরণ ও একক এন্ট্রি করতে হবে।')
                                     ->default(false)
-                                    // 🔥 THE SCOPING FIX: Escapes modal container to check main form state
-                                    ->visible(fn (Forms\Get $get) => $get('../../type') === 'debit'),
+                                    // 🔥 FIXED CLOSURE EVALUATION POINTER
+                                    ->visible(function (Forms\Components\Toggle $component) {
+                                        $livewireData = $component->getLivewire()->data;
+                                        return ($livewireData['type'] ?? 'credit') === 'debit';
+                                    }),
                             ])
-                            ->createOptionUsing(function (array $data, Forms\Get $get) {
-                                // 🔥 LOOK UPWARDS: Ensures category saves with correct context type
-                                $parentType = $get('../../type') ?? 'credit';
+                            ->createOptionUsing(function (array $data, Forms\Components\Select $component) {
+                                // Intercept parent data payload cleanly during final database writing
+                                $livewireData = $component->getLivewire()->data;
+                                $parentType = $livewireData['type'] ?? 'credit';
 
                                 $category = Category::create([
                                     'name' => $data['name'],
