@@ -240,7 +240,7 @@ class TransactionResource extends Resource
                             ])
                             ->columnSpan(['default' => 12, 'md' => 6]),
 
-                        Forms\Components\TextInput::make('extra_cost')
+                        Forms\Components\TextInput::make('stockItem.extra_cost') // <--- রিলেশনশিপ ডট নোটেশন
                             ->label('অতিরিক্ত খরচ (পরিবহন/লেবার)')
                             ->numeric()
                             ->prefix('৳')
