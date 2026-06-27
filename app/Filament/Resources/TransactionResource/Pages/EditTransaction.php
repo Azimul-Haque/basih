@@ -31,26 +31,18 @@ class EditTransaction extends EditRecord
         $formData = $this->form->getRawState();
 
         $stockData = data_get($formData, 'stockItem', []);
-        $quantity = (float) (data_get($stockData, 'quantity') ?? 0);
         $extraCost = (float) (data_get($stockData, 'extra_cost') ?? 0);
         $baseAmount = (float) ($formData['amount'] ?? 0);
 
         $category = Category::find($formData['category_id'] ?? null);
 
         if ($category && $category->is_stock) {
-            $finalAmount = $baseAmount + $extraCost;
-
-            $record->update(['amount' => $finalAmount]);
-            $unitPrice = $quantity > 0 ? ($finalAmount / $quantity) : 0;
-
-            \DB::table('stock_items')
-                ->where('transaction_id', $record->id)
-                ->update([
-                    'unit_price' => $unitPrice,
-                    'updated_at' => now(),
-                ]);
+            $record->update([
+                'amount' => $baseAmount + $extraCost
+            ]);
         } else {
-            \DB::table('stock_items')->where('transaction_id', $record->id)->delete();
+            // যদি খাতের ধরণ পরিবর্তন করে নন-স্টক করা হয়, তবে স্টক রেকর্ড মুছে ফেলা
+            $record->stockItem()->delete();
         }
     }
 }
