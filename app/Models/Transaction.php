@@ -29,26 +29,34 @@ class Transaction extends Model
 
     protected static function booted()
     {
-        // ১. লেনদেন তৈরি হওয়ার পর স্টক ইনসার্ট
+        // 1. On creation
         static::created(function ($transaction) {
-            $formData = request()->input('components.0.updates') 
-                ?? request()->input('serverMemo.data') 
-                ?? request()->all();
+            // Gather input payloads across livewire nested data states safely
+            $rawRequest = request()->all();
+            $livewireData = data_get($rawRequest, 'components.0.snapshot.data.data') 
+                ?? data_get($rawRequest, 'serverMemo.data.data') 
+                ?? data_get($rawRequest, 'data', []);
 
-            $quantity = (float) (request()->input('quantity') ?? data_get($formData, 'quantity') ?? data_get($_REQUEST, 'quantity') ?? 0);
-            $unitId = request()->input('unit_id') ?? data_get($formData, 'unit_id') ?? data_get($_REQUEST, 'unit_id');
-            $extraCost = (float) (request()->input('extra_cost') ?? data_get($formData, 'extra_cost') ?? data_get($_REQUEST, 'extra_cost', 0));
+            // Safely pull fields with direct fallbacks to the absolute top request payload
+            $quantity = (float) (data_get($livewireData, 'quantity') ?? request()->input('quantity') ?? 0);
+            $unitId = data_get($livewireData, 'unit_id') ?? request()->input('unit_id');
+            $extraCost = (float) (data_get($livewireData, 'extra_cost') ?? request()->input('extra_cost') ?? 0);
 
-            // 🔥 unit_price হিসাব: মোট টাকার অংক / মালের পরিমাণ (যদি পরিমাণ ০ থেকে বেশি হয়)
-            $amount = (float) ($transaction->amount ?? request()->input('amount') ?? data_get($formData, 'amount') ?? 0);
+            // Auto calculate unit pricing safely
+            $amount = (float) ($transaction->amount ?? data_get($livewireData, 'amount') ?? 0);
             $unitPrice = $quantity > 0 ? ($amount / $quantity) : 0;
 
             if ($transaction->category && $transaction->category->is_stock) {
-                DB::table('stock_items')->insert([
+                // 🔥 BACKUP SAFEGUARD: If unitId is somehow still empty, find the absolute first global unit ID as a structural fallback
+                if (empty($unitId)) {
+                    $unitId = \DB::table('units')->value('id');
+                }
+
+                \DB::table('stock_items')->insert([
                     'transaction_id' => $transaction->id,
-                    'unit_id'        => $unitId,
+                    'unit_id'        => $unitId, 
                     'quantity'       => $quantity,
-                    'unit_price'     => $unitPrice, // কলামের ইরোর দূর করার জন্য অটো-ক্যালকুলেটেড ভ্যালু
+                    'unit_price'     => $unitPrice,
                     'extra_cost'     => $extraCost,
                     'created_at'     => now(),
                     'updated_at'     => now(),
@@ -56,19 +64,25 @@ class Transaction extends Model
             }
         });
 
-        // ২. লেনদেন আপডেট বা এডিট হওয়ার পর স্টক আপডেট
+        // 2. On update
         static::updated(function ($transaction) {
-            $formData = request()->input('components.0.updates') ?? request()->all();
-            
-            $quantity = (float) (request()->input('quantity') ?? data_get($formData, 'quantity') ?? 0);
-            $unitId = request()->input('unit_id') ?? data_get($formData, 'unit_id');
-            $extraCost = (float) (request()->input('extra_cost') ?? data_get($formData, 'extra_cost', 0));
+            $rawRequest = request()->all();
+            $livewireData = data_get($rawRequest, 'components.0.snapshot.data.data') 
+                ?? data_get($rawRequest, 'data', []);
 
-            $amount = (float) ($transaction->amount ?? request()->input('amount') ?? 0);
+            $quantity = (float) (data_get($livewireData, 'quantity') ?? request()->input('quantity') ?? 0);
+            $unitId = data_get($livewireData, 'unit_id') ?? request()->input('unit_id');
+            $extraCost = (float) (data_get($livewireData, 'extra_cost') ?? request()->input('extra_cost') ?? 0);
+
+            $amount = (float) ($transaction->amount ?? data_get($livewireData, 'amount') ?? 0);
             $unitPrice = $quantity > 0 ? ($amount / $quantity) : 0;
 
             if ($transaction->category && $transaction->category->is_stock) {
-                DB::table('stock_items')->updateOrInsert(
+                if (empty($unitId)) {
+                    $unitId = \DB::table('units')->value('id');
+                }
+
+                \DB::table('stock_items')->updateOrInsert(
                     ['transaction_id' => $transaction->id],
                     [
                         'unit_id'    => $unitId,
@@ -79,13 +93,13 @@ class Transaction extends Model
                     ]
                 );
             } else {
-                DB::table('stock_items')->where('transaction_id', $transaction->id)->delete();
+                \DB::table('stock_items')->where('transaction_id', $transaction->id)->delete();
             }
         });
 
-        // ৩. লেনদেন ডিলিট হলে স্টক ডিলিট
+        // 3. On deletion
         static::deleted(function ($transaction) {
-            DB::table('stock_items')->where('transaction_id', $transaction->id)->delete();
+            \DB::table('stock_items')->where('transaction_id', $transaction->id)->delete();
         });
     }
 }
