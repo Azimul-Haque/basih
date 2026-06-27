@@ -190,19 +190,19 @@ class TransactionResource extends Resource
                         return $category && $category->is_stock;
                     })
                     ->schema([
-                        Forms\Components\Select::make('stock_type_id')
-                            // 🔥 Adds dynamic [ক্রয়] or [বিক্রয়] helper label to make inputs explicit
-                            ->label(fn (Forms\Get $get) => ($get('type') ?? 'credit') === 'debit' ? 'স্টকের ধরণ (পণ্যের নাম) [ক্রয়]' : 'স্টকের ধরণ (পণ্যের নাম) [বিক্রয়]')
-                            ->options(StockType::pluck('name', 'id'))
-                            ->searchable()
-                            ->preload()
-                            ->required()
-                            // ADD ON THE GO FOR COMMODITY NAME
-                            ->createOptionForm([
-                                Forms\Components\TextInput::make('name')->label('নতুন পণ্যের নাম')->required(),
-                            ])
-                            ->createOptionUsing(fn (array $data) => StockType::create($data)->id)
-                            ->columnSpan(['default' => 12, 'md' => 4]),
+                        // Forms\Components\Select::make('stock_type_id')
+                        //     // 🔥 Adds dynamic [ক্রয়] or [বিক্রয়] helper label to make inputs explicit
+                        //     ->label(fn (Forms\Get $get) => ($get('type') ?? 'credit') === 'debit' ? 'স্টকের ধরণ (পণ্যের নাম) [ক্রয়]' : 'স্টকের ধরণ (পণ্যের নাম) [বিক্রয়]')
+                        //     ->options(StockType::pluck('name', 'id'))
+                        //     ->searchable()
+                        //     ->preload()
+                        //     ->required()
+                        //     // ADD ON THE GO FOR COMMODITY NAME
+                        //     ->createOptionForm([
+                        //         Forms\Components\TextInput::make('name')->label('নতুন পণ্যের নাম')->required(),
+                        //     ])
+                        //     ->createOptionUsing(fn (array $data) => StockType::create($data)->id)
+                        //     ->columnSpan(['default' => 12, 'md' => 4]),
 
                         Forms\Components\Select::make('unit_id')
                             ->label('পরিমাপের একক')
