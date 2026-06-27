@@ -245,36 +245,31 @@ class TransactionResource extends Resource
                             ->numeric()
                             ->required()
                             ->hint(function (Forms\Get $get, $record) {
-                                // প্যারেন্ট ফর্মের ডাটা রিড করা
-                                $livewireData = $get('../../') ?? []; 
-                                $type = data_get($livewireData, 'type') ?? 'credit';
-                                $categoryId = data_get($livewireData, 'category_id');
+                                // লাইভ সেফ চেক: ধাপে ধাপে প্যারেন্ট স্টেট খোঁজা
+                                $type = $get('../../type') ?? $get('../type') ?? request()->input('components.0.snapshot.data.data.type') ?? 'credit';
+                                $categoryId = $get('../../category_id') ?? $get('../category_id') ?? request()->input('components.0.snapshot.data.data.category_id');
 
+                                // 🔥 আইডি না থাকলে কুয়েরি রান না করে এখানেই ব্রেক করা হলো
                                 if (!$categoryId) return null;
 
-                                // গুদামে মোট কত কেনা হয়েছে
                                 $totalPurchased = (float) \DB::table('transactions')
                                     ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
                                     ->where('transactions.category_id', $categoryId)
                                     ->where('transactions.type', 'debit')
                                     ->sum('stock_items.quantity');
 
-                                // গুদাম থেকে মোট কত বিক্রি হয়েছে
                                 $totalSold = (float) \DB::table('transactions')
                                     ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
                                     ->where('transactions.category_id', $categoryId)
                                     ->where('transactions.type', 'credit')
                                     ->sum('stock_items.quantity');
                                 
-                                // বর্তমান গুদাম স্টক
                                 $availableStock = $totalPurchased - $totalSold;
 
-                                // এডিট পেজে থাকলে বর্তমান রেকর্ডের নিজের পরিমাণটুকু স্টকে ফেরত যোগ করতে হবে
                                 if ($record && $record->stockItem) {
                                     $availableStock += (float) $record->stockItem->quantity;
                                 }
 
-                                // যদি বিক্রয় মোড হয়, তবে সর্বোচ্চ বিক্রয়সীমা দেখাবে
                                 if ($type === 'credit') {
                                     return '⚠️ গুদামে অবশিষ্ট আছে: ' . number_format($availableStock);
                                 }
@@ -283,11 +278,10 @@ class TransactionResource extends Resource
                             })
                             ->hintColor('warning')
                             ->rules(function (Forms\Get $get, $record) {
-                                $livewireData = $get('../../') ?? []; 
-                                $type = data_get($livewireData, 'type') ?? 'credit';
-                                $categoryId = data_get($livewireData, 'category_id');
+                                $type = $get('../../type') ?? $get('../type') ?? 'credit';
+                                $categoryId = $get('../../category_id') ?? $get('../category_id');
 
-                                // যদি ক্রয় (debit) মোড হয়, তবে কোনো সর্বোচ্চ সীমা নেই
+                                // 🔥 আইডি বা টাইপ ক্র্যাশ প্রুফ গার্ড
                                 if ($type === 'debit' || !$categoryId) return [];
 
                                 $totalPurchased = (float) \DB::table('transactions')
