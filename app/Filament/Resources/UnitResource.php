@@ -19,6 +19,10 @@ class UnitResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $modelLabel = 'পরিমাপের একক';
+    protected static ?string $pluralModelLabel = 'স্টক ইউনিট তালিকা';
+    protected static ?string $navigationLabel = 'স্টক ইউনিট তালিকা';
+
     public static function form(Form $form): Form
     {
         return $form
