@@ -27,10 +27,6 @@ class Transaction extends Model
         return $this->hasOne(StockItem::class, 'transaction_id');
     }
 
-    public function stockItem() {
-        return $this->hasOne(StockItem::class, 'transaction_id');
-    }
-
     protected static function booted()
     {
         // 1. On creation
