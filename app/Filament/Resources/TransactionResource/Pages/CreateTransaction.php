@@ -22,37 +22,27 @@ class CreateTransaction extends CreateRecord
         $record = $this->record; 
         $formData = $this->form->getRawState(); 
 
-        // ১. ফর্ম থেকে মূল ডাটাগুলো নেওয়া
-        $quantity = (float) (data_get($formData, 'stockItem.quantity') ?? $formData['quantity'] ?? 0);
-        $extraCost = (float) (data_get($formData, 'stockItem.extra_cost') ?? $formData['extra_cost'] ?? 0);
+        // ফিলামেন্ট রিলেশন সেকশন থেকে ডাটা রিড করা
+        $stockData = data_get($formData, 'stockItem', []);
+        $quantity = (float) (data_get($stockData, 'quantity') ?? 0);
+        $extraCost = (float) (data_get($stockData, 'extra_cost') ?? 0);
         $baseAmount = (float) ($formData['amount'] ?? 0);
 
-        // ক্যাটাগরি চেক করা
         $category = Category::find($formData['category_id'] ?? null);
 
         if ($category && $category->is_stock) {
-            
-            // ২. 🔥 অতিরিক্ত খরচ মূল অ্যামাউন্টের সাথে যোগ করে ফাইনাল অ্যামাউন্ট বের করা (যেহেতু এটি ডেবিট)
             $finalAmount = $baseAmount + $extraCost;
 
-            // ৩. লেনদেন (Transaction) টেবিলের amount কলামটি ডাটাবেজে আপডেট করে দেওয়া
-            $record->update([
-                'amount' => $finalAmount
-            ]);
-
-            // ৪. unit_price হিসাব: চূড়ান্ত মোট টাকা / মালের পরিমাণ
+            $record->update(['amount' => $finalAmount]);
             $unitPrice = $quantity > 0 ? ($finalAmount / $quantity) : 0;
 
-            // ৫. stock_items টেবিলে ইনসার্ট করা
-            DB::table('stock_items')->insert([
-                'transaction_id' => $record->id,
-                'unit_id'        => data_get($formData, 'stockItem.unit_id') ?? $formData['unit_id'] ?? null,
-                'quantity'       => $quantity,
-                'unit_price'     => $unitPrice,
-                'extra_cost'     => $extraCost,
-                'created_at'     => now(),
-                'updated_at'     => now(),
-            ]);
+            // ফিলামেন্ট অলরেডি রো তৈরি করে ফেলেছে, আমরা জাস্ট unit_price এবং টাইমিং আপডেট করে দেব
+            \DB::table('stock_items')
+                ->where('transaction_id', $record->id)
+                ->update([
+                    'unit_price' => $unitPrice,
+                    'updated_at' => now(),
+                ]);
         }
     }
 }
