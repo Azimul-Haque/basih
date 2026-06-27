@@ -71,13 +71,12 @@ class TransactionResource extends Resource
                                 Forms\Components\TextInput::make('name')
                                     ->label('নতুন খাতের নাম')
                                     ->required()
-                                    // 🔥 FIXED NAMESPACE: Uses root Form class mapping directly
+                                    // 🔥 FIXED: Uses standard parameter injection to fetch parent layout data securely
                                     ->unique(
                                         table: 'categories',
                                         column: 'name',
-                                        modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Form $form) {
-                                            $mainFormState = $form->getLivewire()->data;
-                                            $parentType = $mainFormState['type'] ?? 'credit';
+                                        modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Forms\Get $get) {
+                                            $parentType = $get('type') ?? 'credit';
                                             return $rule->where('type', $parentType);
                                         }
                                     ),
@@ -86,15 +85,11 @@ class TransactionResource extends Resource
                                     ->label('এটি কি স্টকের খাত?')
                                     ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের ধরণ ও একক এন্ট্রি করতে হবে।')
                                     ->default(false)
-                                    // 🔥 FIXED NAMESPACE BELOW
-                                    ->visible(function (Form $form) {
-                                        $mainFormState = $form->getLivewire()->data;
-                                        return ($mainFormState['type'] ?? 'credit') === 'debit';
-                                    }),
+                                    // 🔥 FIXED: Reads parent toggle button straight out of state hooks
+                                    ->visible(fn (Forms\Get $get) => $get('type') === 'debit'),
                             ])
-                            ->createOptionUsing(function (array $data, Form $form) {
-                                $mainFormState = $form->getLivewire()->data;
-                                $parentType = $mainFormState['type'] ?? 'credit';
+                            ->createOptionUsing(function (array $data, Forms\Get $get) {
+                                $parentType = $get('type') ?? 'credit';
 
                                 $category = Category::create([
                                     'name' => $data['name'],
