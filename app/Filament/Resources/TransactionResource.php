@@ -145,18 +145,57 @@ class TransactionResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\Layout\Split::make([
+                    // Left Block: Date & Category Name stacked together
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('date')
+                            ->date('d M, Y')
+                            ->label('তারিখ')
+                            ->color('gray')
+                            ->size('sm'),
+                        Tables\Columns\TextColumn::make('category.name')
+                            ->label('খাত')
+                            ->weight('bold')
+                            ->searchable()
+                            ->size('md'),
+                    ]),
+                    
+                    // Right Block: Amount Badge colored dynamically by Credit/Debit type
+                    Tables\Columns\TextColumn::make('amount')
+                        ->label('টাকার পরিমাণ')
+                        ->money('BDT', divideBy: 1)
+                        ->prefix(fn ($record) => $record->type === 'credit' ? '+ ৳' : '- ৳')
+                        ->color(fn ($record) => $record->type === 'credit' ? 'success' : 'danger')
+                        ->weight('bold')
+                        ->alignEnd(),
+                ]),
+                
+                // Collapsible panel visible under each row to display notes on mobile tapping
+                Tables\Columns\Layout\Panel::make([
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('note')
+                            ->prefix('মন্তব্য: ')
+                            ->color('gray')
+                            ->visible(fn ($record) => !empty($record->note)),
+                    ]),
+                ])->collapsible(),
             ])
             ->filters([
-                //
+                // Date Range Filter: Essential for tracking monthly summaries
+                Tables\Filters\Filter::make('date')
+                    ->form([
+                        Forms\Components\DatePicker::make('from')->label('শুরুর তারিখ'),
+                        Forms\Components\DatePicker::make('until')->label('শেষের তারিখ'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['from'], fn ($q) => $q->whereDate('date', '>=', $data['from']))
+                            ->when($data['until'], fn ($q) => $q->whereDate('date', '<=', $data['until']));
+                    })
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\EditAction::make()->iconButton(),
+                Tables\Actions\DeleteAction::make()->iconButton(),
             ]);
     }
 
