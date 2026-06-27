@@ -42,6 +42,24 @@ class StockItem extends Model
 
             // unit_price হিসাব
             $stockItem->unit_price = $quantity > 0 ? ($totalCost / $quantity) : 0;
+
+            // 🔥 নতুন সংযোজন: যদি ডাটাবেজে ইনসার্ট হওয়ার সময় unit_id কোনো কারণে ফাঁকা থাকে (যেমন বিক্রয় মোডে)
+            if (empty($stockItem->unit_id) && $transaction) {
+                $categoryId = $transaction->category_id;
+
+                // গুদামে এই খাতের পণ্য সর্বশেষ যে এককে কেনা হয়েছিল, মডেল নিজে থেকে সেই এককটি খুঁজে বের করবে
+                $lastPurchaseItem = self::join('transactions', 'stock_items.transaction_id', '=', 'transactions.id')
+                    ->where('transactions.category_id', $categoryId)
+                    ->where('transactions.type', 'debit')
+                    ->orderBy('transactions.date', 'desc')
+                    ->orderBy('transactions.id', 'desc')
+                    ->select('stock_items.unit_id')
+                    ->first();
+
+                if ($lastPurchaseItem) {
+                    $stockItem->unit_id = $lastPurchaseItem->unit_id;
+                }
+            }
         });
     }
 }
