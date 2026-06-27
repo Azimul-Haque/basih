@@ -12,9 +12,9 @@ class ManageDebits extends ListRecords
 
     protected static ?string $title = 'খরচ খাতা (Debit)';
 
-    // 🔥 খরচ বা ডেবিট ডাটা ফিল্টার
-    protected function modifyQueryUsing(Builder $query): Builder
+    // 🔥 অফিশিয়াল ফিলামেন্ট কুয়েরি আইসোলেশন বিল্ডার
+    protected function getTableQuery(): ?Builder
     {
-        return $query->where('type', 'debit');
+        return static::getResource()::getEloquentQuery()->where('type', 'debit');
     }
 }
