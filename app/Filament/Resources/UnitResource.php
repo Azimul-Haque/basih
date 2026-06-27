@@ -50,7 +50,7 @@ class UnitResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')
-                    ->label('আইডি')
+                    ->label('ক্রমিক')
                     ->sortable()
                     ->searchable(),
 
