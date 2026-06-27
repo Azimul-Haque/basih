@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('category_id')->constrained()->onDelete('cascade');
+            $table->date('date'); // তারিখ
+            $table->enum('type', ['credit', 'debit']); // জমা/খরচ
+            $table->decimal('amount', 15, 2); // মোট টাকা
+            $table->text('note')->nullable(); // মন্তব্য
             $table->timestamps();
         });
     }
