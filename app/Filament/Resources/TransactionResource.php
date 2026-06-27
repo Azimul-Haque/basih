@@ -77,8 +77,8 @@ class TransactionResource extends Resource
                                     ->unique(
                                         table: 'categories',
                                         column: 'name',
-                                        modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Forms\Component $component) {
-                                            // 🔥 SAFELY GET THE TRANSACTION TYPE FROM THE BACKGROUND FORM
+                                        modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, mixed $component) {
+                                            // Safe dynamic layout fallback lookup
                                             $mainFormState = $component->getContainer()->getParentComponent()->getLivewire()->data;
                                             $parentType = $mainFormState['type'] ?? 'credit';
                                             return $rule->where('type', $parentType);
@@ -89,14 +89,13 @@ class TransactionResource extends Resource
                                     ->label('এটি কি স্টকের খাত?')
                                     ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের ধরণ ও একক এন্ট্রি করতে হবে।')
                                     ->default(false)
-                                    // 🔥 THE FIX: Look up the real active background state dynamically
-                                    ->visible(function (Forms\Component $component) {
+                                    // 🔥 FIXED TYPE-HINT HERE: Using mixed to accept the Toggle component instance safely
+                                    ->visible(function (mixed $component) {
                                         $mainFormState = $component->getContainer()->getParentComponent()->getLivewire()->data;
                                         return ($mainFormState['type'] ?? 'credit') === 'debit';
                                     }),
                             ])
-                            ->createOptionUsing(function (array $data, Forms\Component $component) {
-                                // Grab the background form state during data submission
+                            ->createOptionUsing(function (array $data, mixed $component) {
                                 $mainFormState = $component->getContainer()->getParentComponent()->getLivewire()->data;
                                 $parentType = $mainFormState['type'] ?? 'credit';
 
