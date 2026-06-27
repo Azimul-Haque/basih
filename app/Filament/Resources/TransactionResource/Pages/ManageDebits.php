@@ -14,6 +14,9 @@ class ManageDebits extends Page implements HasTable
 
     protected static string $resource = TransactionResource::class;
 
+    // 🔥 এটি যুক্ত করুন যেন ফিলামেন্ট রাউটার পেজটিকে রিসোর্সের মেম্বার হিসেবে চেনে
+    protected static ?string $navigationLabel = 'জমা খাতা';
+
     protected static string $view = 'filament.resources.transaction-resource.pages.manage-debits';
 
     protected static ?string $title = 'খরচ খাতা (Debit)';
