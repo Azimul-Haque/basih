@@ -502,9 +502,10 @@ class TransactionResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListTransactions::class, // পুরোনো মেইন ইনডেক্স
-            'credits' => Pages\ManageCredits::class,   // 🔥 নতুন জমা খাতা পৃষ্ঠা
-            'debits' => Pages\ManageDebits::class,     // 🔥 নতুন খরচ খাতা পৃষ্ঠা
+            'index' => Pages\ListTransactions::class,
+            // 🔥 রুট স্ল্যাগসহ কাস্টম পেজ রেজিস্টার করা হলো
+            'credits' => Pages\ManageCredits::route('/credits'), 
+            'debits' => Pages\ManageDebits::route('/debits'),    
             'create' => Pages\CreateTransaction::class,
             'edit' => Pages\EditTransaction::class,
         ];
