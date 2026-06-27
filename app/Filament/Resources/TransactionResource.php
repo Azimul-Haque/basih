@@ -233,6 +233,7 @@ class TransactionResource extends Resource
                             ->searchable()
                             ->preload()
                             ->required()
+                            // 🔥 যখনই মেইন ফর্মের ক্যাটাগরি চেঞ্জ হবে, এই ডিফল্ট কুয়েরি লাইভ ভ্যালু টেনে আনবে
                             ->default(function (Forms\Get $get) {
                                 $categoryId = $get('../../category_id') ?? $get('../category_id');
                                 if (!$categoryId) return null;
@@ -247,11 +248,13 @@ class TransactionResource extends Resource
 
                                 return $lastStockItem ? $lastStockItem->unit_id : null;
                             })
-                            // 🔥 ম্যাজিক পার্ট: লেনদেনের ধরণ যদি 'credit' (বিক্রয়) হয়, তবে এই ফিল্ডটি এডিট করা যাবে না (Locked)
-                            ->readonly(function (Forms\Get $get) {
+                            // 🔥 কন্ডিশনাল ডিজেবল: ক্রেডিট বা বিক্রয় মোড হলে ড্রপডাউনটি লক থাকবে
+                            ->disabled(function (Forms\Get $get) {
                                 $type = $get('../../type') ?? $get('../type') ?? request()->input('components.0.snapshot.data.data.type') ?? 'credit';
                                 return $type === 'credit';
                             })
+                            // 🔥 ডিজেবল ফিল্ডের ভ্যালু ডাটাবেজে পাঠানোর জন্য এটি অত্যন্ত জরুরী
+                            ->dehydrated() 
                             ->createOptionForm([
                                 Forms\Components\TextInput::make('name')->label('নতুন পরিমাপের একক')->required(),
                             ])
