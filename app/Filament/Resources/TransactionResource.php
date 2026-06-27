@@ -515,19 +515,17 @@ class TransactionResource extends Resource
     public static function getNavigationItems(): array
     {
         return [
-            // মেনু ১: জমা খাতা
             NavigationItem::make('জমা খাতা')
                 ->label('জমা খাতা')
                 ->icon('heroicon-o-arrow-trending-up')
-                ->url(static::getUrl('credits'))
+                ->url(fn (): string => static::getUrl('credits')) // <--- fn() ক্লোজার ব্যবহার করা নিরাপদ
                 ->isActiveWhen(fn () => request()->routeIs('filament.admin.resources.transactions.credits'))
-                ->sort(2), // ড্যাশবোর্ডের ঠিক নিচে অবস্থান করবে
+                ->sort(2),
 
-            // মেনু ২: খরচ খাতা
             NavigationItem::make('খরচ খাতা')
                 ->label('খরচ খাতা')
                 ->icon('heroicon-o-arrow-trending-down')
-                ->url(static::getUrl('debits'))
+                ->url(fn (): string => static::getUrl('debits'))
                 ->isActiveWhen(fn () => request()->routeIs('filament.admin.resources.transactions.debits'))
                 ->sort(3),
         ];
