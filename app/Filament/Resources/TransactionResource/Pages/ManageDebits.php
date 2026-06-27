@@ -10,7 +10,7 @@ use Filament\Tables\Table;
 
 class ManageDebits extends Page implements HasTable
 {
-    use IntersectsWithTables;
+    use InteractsWithTable;
 
     protected static string $resource = TransactionResource::class;
 
@@ -20,7 +20,6 @@ class ManageDebits extends Page implements HasTable
 
     public function table(Table $table): Table
     {
-        // 🔥 মূল টেবিল স্ট্রাকচার কল করে শুধু 'debit' (ক্রয়/খরচ) ডাটা ফিল্টার করা হলো
         return TransactionResource::table($table)
             ->modifyQueryUsing(fn ($query) => $query->where('type', 'debit'))
             ->heading('সকল খরচের তালিকা');
