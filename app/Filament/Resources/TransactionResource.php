@@ -73,13 +73,23 @@ class TransactionResource extends Resource
                             ->createOptionForm([
                                 Forms\Components\TextInput::make('name')
                                     ->label('নতুন খাতের নাম')
-                                    ->required(),
+                                    ->required()
+                                    // 🔥 THE UNIQUE RULE: Checks the 'categories' table where the 'type' column matches the parent selection
+                                    ->unique(
+                                        table: 'categories',
+                                        column: 'name',
+                                        modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Forms\Get $get) {
+                                            // Gets the active transaction type (credit or debit) from the main form
+                                            $parentType = $get('../../type') ?? 'credit'; 
+                                            return $rule->where('type', $parentType);
+                                        },
+                                        ignoringRecord: true
+                                    ),
 
                                 Forms\Components\Toggle::make('is_stock')
                                     ->label('এটি কি স্টকের খাত?')
                                     ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের ধরণ ও একক এন্ট্রি করতে হবে।')
                                     ->default(false)
-                                    // Look up two levels out to check the parent form's 'type' field state
                                     ->visible(fn (Forms\Get $get) => $get('../../type') === 'debit'),
                             ])
                             ->createOptionUsing(function (array $data, Forms\Get $get) {
