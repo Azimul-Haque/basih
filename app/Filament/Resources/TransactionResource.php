@@ -52,8 +52,8 @@ class TransactionResource extends Resource
                             ])
                             ->inline()
                             ->required()
-                            ->default('credit')
-                            ->live() 
+                            ->default('credit') // Hard-default ensures form loads with data
+                            ->live()            // Aggressively re-renders form when tapped
                             ->afterStateUpdated(fn ($set) => $set('category_id', null))
                             ->columnSpan(['default' => 12, 'md' => 4]),
 
@@ -61,16 +61,15 @@ class TransactionResource extends Resource
                             ->label('খাত / ক্যাটাগরি')
                             ->required()
                             ->searchable()
-                            ->live()
-                            // 🔥 FIXED: Changed named parameter to modifyQueryUsing
-                            ->relationship(
-                                name: 'category',
-                                titleAttribute: 'name',
-                                modifyQueryUsing: function (Forms\Get $get, $query) {
-                                    $currentType = $get('type') ?? 'credit'; // Default to credit if empty
-                                    return $query->where('type', $currentType);
-                                }
-                            )
+                            ->live() // Keeps field listening to container swaps
+                            // 🔥 THE DEFENSIVE OPTIONS FIX: Works independently of relationship lifecycle loops
+                            ->options(function (Forms\Get $get) {
+                                $selectedType = $get('type') ?? 'credit';
+                                
+                                return Category::where('type', $selectedType)
+                                    ->pluck('name', 'id')
+                                    ->toArray();
+                            })
                             ->createOptionForm([
                                 Forms\Components\TextInput::make('name')
                                     ->label('নতুন খাতের নাম')
