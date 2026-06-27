@@ -24,4 +24,21 @@ class EditTransaction extends EditRecord
     {
         return $this->getResource()::getUrl('index');
     }
+
+    protected function afterSave(): void
+    {
+        $record = $this->record;
+        $formData = $this->form->getRawState();
+
+        // বর্তমান ক্যাটাগরি আইডি খুঁজে বের করা
+        $categoryId = $formData['category_id'] ?? null;
+        $category = Category::find($categoryId);
+
+        // সেফটি চেক: যদি খাতটি স্টক ট্র্যাক না করে, কিন্তু ডাটাবেজে আগের কোনো স্টক রেকর্ড থেকে থাকে
+        if (!$category || !$category->is_stock) {
+            if ($record->stockItem) {
+                $record->stockItem()->delete();
+            }
+        }
+    }
 }
