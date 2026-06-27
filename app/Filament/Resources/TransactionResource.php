@@ -500,9 +500,11 @@ class TransactionResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListTransactions::route('/'),
-            'create' => Pages\CreateTransaction::route('/create'),
-            'edit' => Pages\EditTransaction::route('/{record}/edit'),
+            'index' => Pages\ListTransactions::class, // পুরোনো মেইন ইনডেক্স
+            'credits' => Pages\ManageCredits::class,   // 🔥 নতুন জমা খাতা পৃষ্ঠা
+            'debits' => Pages\ManageDebits::class,     // 🔥 নতুন খরচ খাতা পৃষ্ঠা
+            'create' => Pages\CreateTransaction::class,
+            'edit' => Pages\EditTransaction::class,
         ];
     }
 }
