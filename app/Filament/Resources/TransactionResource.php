@@ -509,4 +509,25 @@ class TransactionResource extends Resource
             'edit' => Pages\EditTransaction::class,
         ];
     }
+
+    public static function getNavigationItems(): array
+    {
+        return [
+            // মেনু ১: জমা খাতা
+            NavigationItem::make('জমা খাতা')
+                ->label('জমা খাতা')
+                ->icon('heroicon-o-arrow-trending-up')
+                ->url(static::getUrl('credits'))
+                ->isActiveWhen(fn () => request()->routeIs('filament.admin.resources.transactions.credits'))
+                ->sort(2), // ড্যাশবোর্ডের ঠিক নিচে অবস্থান করবে
+
+            // মেনু ২: খরচ খাতা
+            NavigationItem::make('খরচ খাতা')
+                ->label('খরচ খাতা')
+                ->icon('heroicon-o-arrow-trending-down')
+                ->url(static::getUrl('debits'))
+                ->isActiveWhen(fn () => request()->routeIs('filament.admin.resources.transactions.debits'))
+                ->sort(3),
+        ];
+    }
 }
