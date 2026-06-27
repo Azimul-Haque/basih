@@ -66,13 +66,21 @@ class TransactionResource extends Resource
                             ->required()
                             ->reactive()
                             ->live()
-                            // This allows adding a new category on the go via a dynamic pop-up modal!
+                            // 🔥 THE DEFINITIVE FIX: Inject the parent's type data straight into the modal action state
+                            ->createOptionAction(function (Forms\Components\Actions\Action $action, Forms\Get $get) {
+                                return $action->mutateFormComponentUsing(function (Forms\Components\Component $component) use ($get) {
+                                    // Forcefully inherit the parent 'type' value right as the modal initializes
+                                    $component->state(['type' => $get('type')]);
+                                });
+                            })
                             ->createOptionForm([
                                 Forms\Components\TextInput::make('name')
                                     ->label('নতুন খাতের নাম')
                                     ->required(),
+                                    
+                                // This input handles the value safely inside the modal layout
                                 Forms\Components\Hidden::make('type')
-                                    ->default(fn (Forms\Get $get) => $get('../../type')),
+                                    ->required(),
                             ])
                             ->createOptionUsing(function (array $data) {
                                 return Category::create($data)->id;
