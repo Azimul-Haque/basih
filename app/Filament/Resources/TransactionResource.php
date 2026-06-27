@@ -189,6 +189,8 @@ class TransactionResource extends Resource
                         : '📦 স্টক / ইনভেন্টরি বিবরণী (বিক্রয় / মাল খালাস)';
                 })
                     ->description('পণ্য পরিমাণ ও একক সংক্রান্ত অতিরিক্ত তথ্য এখানে পূরণ করুন।')
+                    // 🔥 এই লাইনটি ফিলামেন্টকে বলবে স্টক রিলেশনের ডাটা এডিট ফর্মে অটো-লোড করতে
+                    ->relationship('stockItem') 
                     ->visible(function (Forms\Get $get) {
                         $categoryId = $get('category_id');
                         if (!$categoryId) return false;
@@ -197,7 +199,7 @@ class TransactionResource extends Resource
                         return $category && $category->is_stock;
                     })
                     ->schema([
-                        Forms\Components\Select::make('stockItem.unit_id') // <--- রিলেশনশিপ ডট নোটেশন
+                        Forms\Components\Select::make('unit_id') // <--- ডট নোটেশন ছাড়া সাধারণ নাম
                             ->label('পরিমাপের একক')
                             ->options(\App\Models\Unit::pluck('name', 'id'))
                             ->searchable()
@@ -209,15 +211,18 @@ class TransactionResource extends Resource
                             ->createOptionUsing(fn (array $data) => \App\Models\Unit::create($data)->id)
                             ->columnSpan(['default' => 12, 'md' => 6]),
 
-                        Forms\Components\TextInput::make('stockItem.quantity') // <--- রিলেশনশিপ ডট নোটেশন
+                        Forms\Components\TextInput::make('quantity') // <--- ডট নোটেশন ছাড়া সাধারণ নাম
                             ->label('মালের পরিমাণ')
                             ->numeric()
                             ->required()
                             ->rules(function (Forms\Get $get) {
-                                if (($get('type') ?? 'credit') === 'debit') return [];
+                                // যেহেতু সেকশনটি রিলেশনের ভেতরে ঢুকে গেছে, তাই টাইপ বা ক্যাটাগরি আইডি পেতে হলে 
+                                // লাইভওয়্যারের প্যারেন্ট ডাটা এরে চেক করতে হবে
+                                $livewireData = $get('../../') ?? []; 
+                                $type = data_get($livewireData, 'type') ?? 'credit';
+                                $categoryId = data_get($livewireData, 'category_id');
 
-                                $categoryId = $get('category_id');
-                                if (!$categoryId) return [];
+                                if ($type === 'debit' || !$categoryId) return [];
 
                                 $totalPurchased = (float) \DB::table('transactions')
                                     ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
@@ -240,12 +245,15 @@ class TransactionResource extends Resource
                             ])
                             ->columnSpan(['default' => 12, 'md' => 6]),
 
-                        Forms\Components\TextInput::make('stockItem.extra_cost') // <--- রিলেশনশিপ ডট নোটেশন
+                        Forms\Components\TextInput::make('extra_cost') // <--- ডট নোটেশন ছাড়া সাধারণ নাম
                             ->label('অতিরিক্ত খরচ (পরিবহন/লেবার)')
                             ->numeric()
                             ->prefix('৳')
                             ->default(0)
-                            ->visible(fn (Forms\Get $get) => $get('type') === 'debit') 
+                            ->visible(function (Forms\Get $get) {
+                                $livewireData = $get('../../') ?? [];
+                                return (data_get($livewireData, 'type') ?? 'credit') === 'debit';
+                            })
                             ->columnSpan(12),
                     ])->columns(12)
             ]);
