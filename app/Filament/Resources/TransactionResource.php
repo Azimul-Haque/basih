@@ -273,7 +273,8 @@ class TransactionResource extends Resource
                         // 🔥 নতুন: যদি ক্যাটাগরি স্টকের হয়, তবেই মালের পরিমাণ ও একক লাইভ দেখাবে
                         Tables\Columns\TextColumn::make('stockItem.quantity')
                             ->formatStateUsing(function ($state, $record) {
-                                if (!$record->category || !$record->category->is_stock || !$record->stockItem) {
+                                // 🔥 $record null হলে বা ক্যাটাগরি না থাকলে ক্র্যাশ এড়াতে সেফটি চেক
+                                if (!$record || !$record->category || !$record->category->is_stock || !$record->stockItem) {
                                     return null;
                                 }
                                 
@@ -281,7 +282,6 @@ class TransactionResource extends Resource
                                 $unit = $record->stockItem->unit ? $record->stockItem->unit->name : 'একক';
                                 $text = "📦 পরিমাণ: {$qty} {$unit}";
 
-                                // ডেবিট ট্রানজেকশনে অতিরিক্ত খরচ থাকলে তাও পাশে দেখাবে
                                 if ($record->type === 'debit' && $record->stockItem->extra_cost > 0) {
                                     $extra = number_format($record->stockItem->extra_cost);
                                     $text .= " (+ ৳{$extra} গাড়ি/লেবার)";
@@ -291,7 +291,8 @@ class TransactionResource extends Resource
                             })
                             ->color('success')
                             ->size('xs')
-                            ->visible(fn ($record) => $record->category && $record->category->is_stock && $record->stockItem),
+                            // 🔥 FIXED: $record && চেক যুক্ত করা হয়েছে যেন null প্রোপার্টি এরর না আসে
+                            ->visible(fn ($record) => $record && $record->category && $record->category->is_stock && $record->stockItem),
                     ]),
                     
                     // ডান পাশের ব্লক: ক্রেডিট/ডেবিট অনুযায়ী ডাইনামিক কালার অ্যামাউন্ট ব্যাজ
