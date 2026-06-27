@@ -31,7 +31,113 @@ class TransactionResource extends Resource
     {
         return $form
             ->schema([
-                //
+                // Card Wrapper for clean spacing
+                Forms\Components\Section::make('লেনদেনের মূল বিবরণ')
+                    ->schema([
+                        Forms\Components\DatePicker::make('date')
+                            ->label('তারিখ')
+                            ->default(now())
+                            ->required()
+                            ->columnSpan(['default' => 12, 'md' => 4]),
+
+                        Forms\Components\ToggleButtons::make('type')
+                            ->label('লেনদেনের ধরণ')
+                            ->options([
+                                'credit' => 'জমা (Credit)',
+                                'debit' => 'খরচ (Debit)',
+                            ])
+                            ->colors([
+                                'credit' => 'success',
+                                'debit' => 'danger',
+                            ])
+                            ->inline()
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(fn ($set) => $set('category_id', null))
+                            ->columnSpan(['default' => 12, 'md' => 4]),
+
+                        Forms\Components\Select::make('category_id')
+                            ->label('খাত / ক্যাটাগরি')
+                            ->options(fn (Forms\Get $get) => 
+                                Category::where('type', $get('type'))->pluck('name', 'id')
+                            )
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->reactive()
+                            // This allows adding a new category on the go via a dynamic pop-up modal!
+                            ->createOptionForm([
+                                Forms\Components\TextInput::make('name')
+                                    ->label('নতুন খাতের নাম')
+                                    ->required(),
+                                Forms\Components\Hidden::make('type')
+                                    ->default(fn (Forms\Get $get) => $get('../../type')),
+                            ])
+                            ->createOptionUsing(function (array $data) {
+                                return Category::create($data)->id;
+                            })
+                            ->columnSpan(['default' => 12, 'md' => 4]),
+
+                        Forms\Components\TextInput::make('amount')
+                            ->label('মোট টাকার অংক')
+                            ->numeric()
+                            ->prefix('৳')
+                            ->required()
+                            ->columnSpan(['default' => 12, 'md' => 6]),
+
+                        Forms\Components\TextInput::make('note')
+                            ->label('অতিরিক্ত বিবরণ / মন্তব্য')
+                            ->columnSpan(['default' => 12, 'md' => 6]),
+                    ])->columns(12),
+
+                // 🔥 STOCKS SUB-FORM PANEL: Sliders open dynamically ONLY if the selected sector name contains "স্টক"
+                Forms\Components\Section::make('স্টক / ইনভেন্টরি বিবরণী')
+                    ->description('পণ্য ক্রয় বা বিক্রয়ের অতিরিক্ত তথ্য এখানে পূরণ করুন।')
+                    ->visible(function (Forms\Get $get) {
+                        $categoryId = $get('category_id');
+                        if (!$categoryId) return false;
+                        $category = Category::find($categoryId);
+                        return $category && (str_contains($category->name, 'স্টক') || str_contains($category->name, 'স্টকের'));
+                    })
+                    ->schema([
+                        Forms\Components\Select::make('stock_type_id')
+                            ->label('স্টকের ধরণ (পণ্যের নাম)')
+                            ->options(StockType::pluck('name', 'id'))
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->createOptionForm([
+                                Forms\Components\TextInput::make('name')->label('নতুন পণ্যের নাম')->required(),
+                            ])
+                            ->createOptionUsing(fn (array $data) => StockType::create($data)->id)
+                            ->columnSpan(['default' => 12, 'md' => 4]),
+
+                        Forms\Components\Select::make('unit_id')
+                            ->label('পরিমাপের একক')
+                            ->options(Unit::pluck('name', 'id'))
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->createOptionForm([
+                                Forms\Components\TextInput::make('name')->label('নতুন একক')->required(),
+                            ])
+                            ->createOptionUsing(fn (array $data) => Unit::create($data)->id)
+                            ->columnSpan(['default' => 12, 'md' => 4]),
+
+                        Forms\Components\TextInput::make('quantity')
+                            ->label('মালের পরিমাণ')
+                            ->numeric()
+                            ->required()
+                            ->columnSpan(['default' => 12, 'md' => 4]),
+
+                        Forms\Components\TextInput::make('extra_cost')
+                            ->label('অতিরিক্ত খরচ (পরিবহন/লেবার)')
+                            ->numeric()
+                            ->prefix('৳')
+                            ->default(0)
+                            ->visible(fn (Forms\Get $get) => $get('type') === 'debit') // Only show extra cost on buying
+                            ->columnSpan(['default' => 12, 'md' => 12]),
+                    ])->columns(12)
             ]);
     }
 
