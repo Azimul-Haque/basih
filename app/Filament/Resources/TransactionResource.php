@@ -256,21 +256,45 @@ class TransactionResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\Layout\Split::make([
-                    // Left Block: Date & Category Name stacked together
+                    // বাম পাশের ব্লক: তারিখ, খাতের নাম এবং স্টক বিবরণী একসাথে স্ট্যাকড
                     Tables\Columns\Layout\Stack::make([
                         Tables\Columns\TextColumn::make('date')
                             ->date('d M, Y')
                             ->label('তারিখ')
                             ->color('gray')
                             ->size('sm'),
+
                         Tables\Columns\TextColumn::make('category.name')
                             ->label('খাত')
                             ->weight('bold')
                             ->searchable()
                             ->size('md'),
+
+                        // 🔥 নতুন: যদি ক্যাটাগরি স্টকের হয়, তবেই মালের পরিমাণ ও একক লাইভ দেখাবে
+                        Tables\Columns\TextColumn::make('stockItem.quantity')
+                            ->formatStateUsing(function ($state, $record) {
+                                if (!$record->category || !$record->category->is_stock || !$record->stockItem) {
+                                    return null;
+                                }
+                                
+                                $qty = number_format($record->stockItem->quantity);
+                                $unit = $record->stockItem->unit ? $record->stockItem->unit->name : 'একক';
+                                $text = "📦 পরিমাণ: {$qty} {$unit}";
+
+                                // ডেবিট ট্রানজেকশনে অতিরিক্ত খরচ থাকলে তাও পাশে দেখাবে
+                                if ($record->type === 'debit' && $record->stockItem->extra_cost > 0) {
+                                    $extra = number_format($record->stockItem->extra_cost);
+                                    $text .= " (+ ৳{$extra} গাড়ি/লেবার)";
+                                }
+
+                                return $text;
+                            })
+                            ->color('success')
+                            ->size('xs')
+                            ->visible(fn ($record) => $record->category && $record->category->is_stock && $record->stockItem),
                     ]),
                     
-                    // Right Block: Amount Badge colored dynamically by Credit/Debit type
+                    // ডান পাশের ব্লক: ক্রেডিট/ডেবিট অনুযায়ী ডাইনামিক কালার অ্যামাউন্ট ব্যাজ
                     Tables\Columns\TextColumn::make('amount')
                         ->label('টাকার পরিমাণ')
                         ->money('BDT', divideBy: 1)
@@ -280,18 +304,21 @@ class TransactionResource extends Resource
                         ->alignEnd(),
                 ]),
                 
-                // Collapsible panel visible under each row to display notes on mobile tapping
+                // 🔥 ডাইনামিক কলাপসিবল প্যানেল: মন্তব্য থাকলেই কেবল ড্রপডাউন অ্যারো বাটন ও প্যানেল আসবে
                 Tables\Columns\Layout\Panel::make([
                     Tables\Columns\Layout\Stack::make([
                         Tables\Columns\TextColumn::make('note')
                             ->prefix('মন্তব্য: ')
                             ->color('gray')
-                            ->visible(fn ($record) => !empty($record->note)),
+                            ->size('sm'),
                     ]),
-                ])->collapsible(),
+                ])
+                ->collapsible()
+                // মন্তব্য ফাঁকা হলে কলাপসিবল মেকানিজম হাইড করে দেবে
+                ->visible(fn ($record) => !empty($record->note)),
             ])
             ->filters([
-                // Date Range Filter: Essential for tracking monthly summaries
+                // ডেট রেঞ্জ ফিল্টার (মাসিক বা নির্দিষ্ট মেয়াদের হিসাব দেখার জন্য)
                 Tables\Filters\Filter::make('date')
                     ->form([
                         Forms\Components\DatePicker::make('from')->label('শুরুর তারিখ'),
