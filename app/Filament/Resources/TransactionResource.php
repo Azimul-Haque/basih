@@ -257,7 +257,7 @@ class TransactionResource extends Resource
                             // 🔥 ১০০% নিশ্চিত ফিক্স: যদি মূল ফর্মের টাইপ 'credit' বা জমা হয়, তবেই কেবল এটি হাইড থাকবে
                             // অন্যথায় খরচ (debit) মোডে এটি সবসময় দৃশ্যমান থাকবে
                             ->hidden(fn (Forms\Get $get) => $get('../../type') === 'credit')
-                            ->columnSpan(12),
+                            ->columnSpan(['default' => 12, 'md' => 6]),
                     ])->columns(12)
             ]);
     }
