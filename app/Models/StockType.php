@@ -9,8 +9,8 @@ class StockType extends Model
 {
     protected $fillable = ['name'];
 
-    public function stockItems(): HasMany
-    {
-        return $this->hasMany(StockItem::class);
-    }
+    // public function stockItems(): HasMany
+    // {
+    //     return $this->hasMany(StockItem::class);
+    // }
 }
