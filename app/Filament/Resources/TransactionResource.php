@@ -112,6 +112,23 @@ class TransactionResource extends Resource
                             ->numeric()
                             ->prefix('৳')
                             ->required()
+
+                            // 🔥 খরচ (Debit) সিলেক্টেড থাকলে ছোট আকারে বর্তমান সর্বোচ্চ ব্যালেন্স দেখাবে
+                            ->hint(function (Forms\Get $get) {
+                                $type = $get('type') ?? 'credit';
+                                if ($type !== 'debit') {
+                                    return null;
+                                }
+
+                                // রিয়েল-টাইম ব্যালেন্স হিসাব
+                                $totalCredit = \App\Models\Transaction::where('type', 'credit')->sum('amount');
+                                $totalDebit = \App\Models\Transaction::where('type', 'debit')->sum('amount');
+                                $availableBalance = $totalCredit - $totalDebit;
+
+                                return 'বর্তমান সর্বোচ্চ ব্যালেন্স: ৳' . number_format($availableBalance);
+                            })
+                            ->hintColor('warning') // হালকা এবং নজরকাড়া কালার (যেমন: warning/danger/gray)
+                            
                             // 🔥 DYNAMIC VALIDATION: Limits Debit to Total Available Balance
                             ->rules(function (Forms\Get $get) {
                                 $type = $get('type') ?? 'credit';
