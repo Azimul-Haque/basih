@@ -5,20 +5,19 @@ namespace App\Providers\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
-use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 use App\Filament\Widgets\LedgerOverview;
+// 🔥 ডিফল্ট ফিলামেন্ট ড্যাশবোর্ডের পরিবর্তে আপনার কাস্টম ড্যাশবোর্ড ক্লাসটি ইম্পোর্ট করা হলো
+use App\Filament\Pages\Dashboard; 
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -36,19 +35,18 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                // 🔥 এখানে আপনার কাস্টম ড্যাশবোর্ড ক্লাসটি পুশ করা হলো
+                Dashboard::class, 
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                // Widgets\AccountWidget::class,
-                // Widgets\FilamentInfoWidget::class,
                 LedgerOverview::class,
             ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
-                AuthenticateSession::class,
+                \Illuminate\Session\Middleware\AuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,
@@ -60,10 +58,5 @@ class AdminPanelProvider extends PanelProvider
             ]);
     }
 
-    public function boot(): void
-    {
-        // 🔥 ডিফল্ট ড্যাশবোর্ডের নাম ও টাইটেল বাংলায় রূপান্তর
-        Pages\Dashboard::navigationLabel('ড্যাশবোর্ড');
-        Pages\Dashboard::title('ড্যাশবোর্ড');
-    }
+    // 💡 ক্র্যাশ করা boot() মেথডটি পুরোপুরি পরিষ্কার করে দেওয়া হলো, এর আর কোনো প্রয়োজন নেই।
 }
