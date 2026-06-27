@@ -21,6 +21,8 @@ class UserResource extends Resource
 
     protected static ?string $modelLabel = 'ব্যবহারকারী তালিকা';
 
+    protected static ?int $navigationSort = 5;
+
     protected static ?string $pluralModelLabel = 'ব্যবহারকারী তালিকা';
 
     public static function form(Form $form): Form
