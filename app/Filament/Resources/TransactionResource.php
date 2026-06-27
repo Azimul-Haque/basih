@@ -197,7 +197,7 @@ class TransactionResource extends Resource
                         return $category && $category->is_stock;
                     })
                     ->schema([
-                        Forms\Components\Select::make('unit_id')
+                        Forms\Components\Select::make('stockItem.unit_id') // <--- রিলেশনশিপ ডট নোটেশন
                             ->label('পরিমাপের একক')
                             ->options(\App\Models\Unit::pluck('name', 'id'))
                             ->searchable()
