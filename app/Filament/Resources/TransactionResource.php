@@ -503,10 +503,9 @@ class TransactionResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListTransactions::class,
-            // 🔥 রুট স্ল্যাগসহ কাস্টম পেজ রেজিস্টার করা হলো
-            'credits' => Pages\ManageCredits::route('/credits'), 
-            'debits' => Pages\ManageDebits::route('/debits'),    
+            'index' => Pages\ListTransactions::class, // মূল অল-ইন-ওয়ান তালিকা (ঐচ্ছিক)
+            'credits' => Pages\ManageCredits::route('/credits'), // স্ল্যাগ রুট ম্যাপ
+            'debits' => Pages\ManageDebits::route('/debits'),    // স্ল্যাগ রুট ম্যাপ
             'create' => Pages\CreateTransaction::class,
             'edit' => Pages\EditTransaction::class,
         ];
