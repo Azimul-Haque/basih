@@ -254,15 +254,10 @@ class TransactionResource extends Resource
                             ->numeric()
                             ->prefix('৳')
                             ->default(0)
-                            // 🔥 FIXED: Looks at the top-level absolute form layout context to verify type
-                            ->visible(function (Forms\Get $get) {
-                                // Step out twice from the nested relationship tree container state structure
-                                $livewireData = $get('../../') ?? [];
-                                $type = data_get($livewireData, 'type') ?? request()->input('components.0.snapshot.data.data.type') ?? 'credit';
-                                
-                                return $type === 'debit';
-                            })
-                            ->columnSpan(['default' => 12, 'md' => 6]),
+                            // 🔥 ১০০% নিশ্চিত ফিক্স: যদি মূল ফর্মের টাইপ 'credit' বা জমা হয়, তবেই কেবল এটি হাইড থাকবে
+                            // অন্যথায় খরচ (debit) মোডে এটি সবসময় দৃশ্যমান থাকবে
+                            ->hidden(fn (Forms\Get $get) => $get('../../type') === 'credit')
+                            ->columnSpan(12),
                     ])->columns(12)
             ]);
     }
