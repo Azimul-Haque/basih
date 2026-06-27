@@ -233,7 +233,7 @@ class TransactionResource extends Resource
                             ->searchable()
                             ->preload()
                             ->required()
-                            // 🔥 যখনই মেইন ফর্মের ক্যাটাগরি চেঞ্জ হবে, এই ডিফল্ট কুয়েরি লাইভ ভ্যালু টেনে আনবে
+                            // ১. ডাইনামিক ডিফল্ট ভ্যালু (আগের মতোই থাকবে)
                             ->default(function (Forms\Get $get) {
                                 $categoryId = $get('../../category_id') ?? $get('../category_id');
                                 if (!$categoryId) return null;
@@ -248,13 +248,20 @@ class TransactionResource extends Resource
 
                                 return $lastStockItem ? $lastStockItem->unit_id : null;
                             })
-                            // 🔥 কন্ডিশনাল ডিজেবল: ক্রেডিট বা বিক্রয় মোড হলে ড্রপডাউনটি লক থাকবে
-                            ->disabled(function (Forms\Get $get) {
+                            // 🔥 ম্যাজিক পার্ট: ক্রেডিট বা বিক্রয় মোড হলে ফিল্ডটিতে ক্লিক বা এডিট করা যাবে না, 
+                            // কিন্তু ভ্যালুটি ইনপুটে একদম স্পষ্ট ও সুন্দরভাবে ভেসে থাকবে!
+                            ->extraAttributes(function (Forms\Get $get) {
                                 $type = $get('../../type') ?? $get('../type') ?? request()->input('components.0.snapshot.data.data.type') ?? 'credit';
-                                return $type === 'credit';
+                                
+                                if ($type === 'credit') {
+                                    return [
+                                        'style' => 'pointer-events: none; background-color: rgba(243, 244, 246, 0.1); cursor: not-allowed;',
+                                        'tabindex' => '-1', // কিবোর্ড ফোকাস ব্লক করার জন্য
+                                    ];
+                                }
+                                
+                                return [];
                             })
-                            // 🔥 ডিজেবল ফিল্ডের ভ্যালু ডাটাবেজে পাঠানোর জন্য এটি অত্যন্ত জরুরী
-                            ->dehydrated() 
                             ->createOptionForm([
                                 Forms\Components\TextInput::make('name')->label('নতুন পরিমাপের একক')->required(),
                             ])
