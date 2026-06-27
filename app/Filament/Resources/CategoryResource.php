@@ -38,14 +38,14 @@ class CategoryResource extends Resource
                             ->required()
                             // 🔥 THE UNIQUE RULE FOR STANDALONE MANAGER:
                             ->unique(
-                                table: 'categories',
-                                column: 'name',
-                                modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Forms\Get $get) {
-                                    $selectedType = $get('type') ?? 'credit';
-                                    return $rule->where('type', $selectedType);
-                                },
-                                ignoringRecord: true // Crucial so editing an existing record doesn't throw an error
-                            )
+                                    table: 'categories',
+                                    column: 'name',
+                                    modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Forms\Get $get) {
+                                        $selectedType = $get('type') ?? 'credit';
+                                        return $rule->where('type', $selectedType);
+                                    },
+                                    ignoreRecord: true // <-- Filament v3 uses ignoreRecord chained or as a parameter here safely
+                                )
                             ->columnSpan(['default' => 12, 'md' => 6]),
 
                         Forms\Components\ToggleButtons::make('type')
