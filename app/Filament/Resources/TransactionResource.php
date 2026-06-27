@@ -60,6 +60,7 @@ class TransactionResource extends Resource
                             ->label('খাত / ক্যাটাগরি')
                             ->required()
                             ->searchable()
+                            ->default('credit')
                             ->live()
                             // 🔥 FIXED: Changed named parameter to modifyQueryUsing
                             ->relationship(
