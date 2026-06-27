@@ -60,26 +60,23 @@ class TransactionResource extends Resource
                             ->label('খাত / ক্যাটাগরি')
                             ->required()
                             ->searchable()
-                            ->live() // Keep tracking component context mutations 
-                            // The secure evaluation array pluck engine
+                            ->live() 
                             ->options(function (Forms\Get $get) {
                                 $selectedType = $get('type') ?? 'credit';
-                                
                                 return Category::where('type', $selectedType)
                                     ->pluck('name', 'id')
                                     ->toArray();
                             })
-                            // 🔥 POPUP MODAL RETURN REALTIME INJECTION
                             ->createOptionForm([
                                 Forms\Components\TextInput::make('name')
                                     ->label('নতুন খাতের নাম')
                                     ->required()
+                                    // 🔥 FIXED: Grab state using the absolute form context handler
                                     ->unique(
                                         table: 'categories',
                                         column: 'name',
-                                        modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, mixed $component) {
-                                            // Safe dynamic layout fallback lookup
-                                            $mainFormState = $component->getContainer()->getParentComponent()->getLivewire()->data;
+                                        modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Filament\Forms\Form $form) {
+                                            $mainFormState = $form->getLivewire()->data;
                                             $parentType = $mainFormState['type'] ?? 'credit';
                                             return $rule->where('type', $parentType);
                                         }
@@ -89,14 +86,15 @@ class TransactionResource extends Resource
                                     ->label('এটি কি স্টকের খাত?')
                                     ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের ধরণ ও একক এন্ট্রি করতে হবে।')
                                     ->default(false)
-                                    // 🔥 FIXED TYPE-HINT HERE: Using mixed to accept the Toggle component instance safely
+                                    // 🔥 FIXED: Direct form level reference lookup bypassing tree walks
                                     ->visible(function (Filament\Forms\Form $form) {
                                         $mainFormState = $form->getLivewire()->data;
                                         return ($mainFormState['type'] ?? 'credit') === 'debit';
                                     }),
                             ])
-                            ->createOptionUsing(function (array $data, mixed $component) {
-                                $mainFormState = $component->getContainer()->getParentComponent()->getLivewire()->data;
+                            ->createOptionUsing(function (array $data, Filament\Forms\Form $form) {
+                                // 🔥 FIXED: Secure state mapping execution block
+                                $mainFormState = $form->getLivewire()->data;
                                 $parentType = $mainFormState['type'] ?? 'credit';
 
                                 $category = Category::create([
