@@ -10,34 +10,32 @@ use Carbon\Carbon;
 
 class LedgerOverview extends BaseWidget
 {
-    // লাইভ ডেটা রিফ্রেশ রেট (প্রতি ১৫ সেকেন্ডে ড্যাশবোর্ড অটো আপডেট হবে)
     protected static ?string $pollingInterval = '15s';
 
-    // উইজেটটিকে ফুল-উইডথ এরিয়া দেওয়া হলো
     protected int | array | string $columnSpan = 'full';
 
-    // 🔥 ম্যাজিক পার্ট: মোবাইলের জন্য ২ কলাম (Half-Half) এবং ডেস্কটপের জন্য ৩ কলাম লেআউট লক করা হলো
+    // 🔥 গ্লোবাল গ্রিড মোবাইলের জন্য ২ কলাম এবং ডেস্কটপের জন্য ৬ কলামে ভাগ করা হলো
     protected int | array | string $columns = [
-        'default' => 2, // মোবাইলে পাশাপাশি ২টি কার্ড দেখাবে
-        'md' => 3,      // মাঝারি স্ক্রিনে ৩টি
-        'lg' => 3,      // বড় ডেস্কটপ স্ক্রিনে ৩টি
+        'default' => 2,
+        'md' => 6,
+        'lg' => 6,
     ];
 
     protected function getStats(): array
     {
-        // ১. মোট জমা (Total Credit)
+        // ১. মোট জমা
         $totalCredit = (float) Transaction::where('type', 'credit')->sum('amount');
 
-        // ২. মোট সাধারণ খরচ (Total Debit Amount)
+        // ২. মোট সাধারণ খরচ
         $totalDebitAmount = (float) Transaction::where('type', 'debit')->sum('amount');
 
-        // ৩. স্টক আইটেম থেকে মোট অতিরিক্ত খরচ (Total Extra Cost)
+        // ৩. স্টক আইটেম থেকে মোট অতিরিক্ত খরচ
         $totalExtraCost = (DB::table('stock_items')->sum('extra_cost') ?? 0);
 
-        // ৪. চূড়ান্ত মোট খরচ (Debit + Extra Cost)
+        // ৪. চূড়ান্ত মোট খরচ
         $finalTotalDebit = $totalDebitAmount + $totalExtraCost;
 
-        // ৫. বর্তমান ব্যবহারযোগ্য নিখুঁত ব্যালেন্স
+        // ৫. বর্তমান ব্যবহারযোগ্য ব্যালেন্স
         $currentBalance = $totalCredit - $finalTotalDebit;
 
         // --- আজকের হিসাব ---
@@ -48,59 +46,72 @@ class LedgerOverview extends BaseWidget
         
         $todayExtraCost = (float) DB::table('stock_items')
             ->join('transactions', 'stock_items.transaction_id', '=', 'transactions.id')
-            ->where('transactions.date', $today)
+            ->whereDate('transactions.date', $today)
             ->sum('stock_items.extra_cost');
             
         $todayTotalDebit = $todayDebitAmount + $todayExtraCost;
 
         return [
             // ==========================================
-            // 🔥 নতুন নেভিগেশনাল ক্লিকযোগ্য কার্ড সেকশন (সার্বজনীন রো ১)
+            // 🟢 রো ১ (মোবাইলে পাশাপাশি হাফ-হাফ, ডেস্কটপে ৩ কলাম করে সমান অর্ধেক)
             // ==========================================
-
-            // 🟢 কার্ড এ: জমা খাতা (Clickable)
             Stat::make(' ', '➡️ জমা খাতা')
                 ->description('সকল জমার বিবরণী দেখতে এখানে ক্লিক করুন')
-                ->descriptionIcon('heroicon-o-arrow-trending-up')
+                ->descriptionIcon('heroicon-m-arrow-up-right')
                 ->color('success')
-                ->url(url('admin/transactions/credits')) // জমা খাতার কাস্টম পেজ লিংক
+                ->url(url('admin/transactions/credits'))
                 ->extraAttributes([
                     'class' => 'cursor-pointer transition hover:scale-[1.02] duration-200 border-l-4 border-emerald-500 rounded-xl shadow-sm',
                     'style' => 'background-color: rgba(16, 185, 129, 0.08); font-weight: 900;',
+                ])
+                ->columnSpan([
+                    'default' => 1, // মোবাইলে ২ কলামের ১ কলাম নিবে (পাশাপাশি হাফ)
+                    'md' => 3,      // ডেস্কটপে ৬ কলামের ৩ কলাম নিবে (পাশাপাশি হাফ)
                 ]),
 
-            // 🔴 কার্ড বি: খরচ খাতা (Clickable)
             Stat::make(' ', '➡️ খরচ খাতা')
                 ->description('সকল খরচের বিবরণী দেখতে এখানে ক্লিক করুন')
-                ->descriptionIcon('heroicon-o-arrow-trending-down')
+                ->descriptionIcon('heroicon-m-arrow-down-right')
                 ->color('danger')
-                ->url(url('admin/transactions/debits')) // খরচ খাতার কাস্টম পেজ লিংক
+                ->url(url('admin/transactions/debits'))
                 ->extraAttributes([
                     'class' => 'cursor-pointer transition hover:scale-[1.02] duration-200 border-l-4 border-rose-500 rounded-xl shadow-sm',
                     'style' => 'background-color: rgba(239, 68, 68, 0.08); font-weight: 900;',
+                ])
+                ->columnSpan([
+                    'default' => 1, // মোবাইলে ২ কলামের ১ কলাম নিবে (পাশাপাশি হাফ)
+                    'md' => 3,      // ডেস্কটপে ৬ কলামের ৩ কলাম নিবে (পাশাপাশি হাফ)
                 ]),
 
             // ==========================================
-            // 📊 বিদ্যমান ৩টি লাইভ স্ট্যাটাস কার্ড (সার্বজনীন রো ২)
+            // 📊 রো ২ (মোবাইলে প্রত্যেকে ফুল উইডথ, ডেস্কটপে সুন্দর ৩টি সমান কলাম)
             // ==========================================
-
-            // 💳 কার্ড ১: মোট জমা ও বর্তমান ব্যালেন্স
             Stat::make('বর্তমান ক্যাশ ব্যালেন্স', '৳ ' . number_format($currentBalance))
                 ->description('মোট জমা: ৳' . number_format($totalCredit))
                 ->descriptionIcon('heroicon-m-wallet')
-                ->color($currentBalance >= 0 ? 'success' : 'danger'),
+                ->color($currentBalance >= 0 ? 'success' : 'danger')
+                ->columnSpan([
+                    'default' => 2, // মোবাইলে ২ কলামের ২ কলামই নিবে (Full Width)
+                    'md' => 2,      // ডেস্কটপে ৬ কলামের ২ কলাম নিবে (১/৩ অংশ)
+                ]),
 
-            // 💸 কার্ড ২: সর্বমোট খরচ
             Stat::make('সর্বমোট খরচ (ডেবিট)', '৳ ' . number_format($finalTotalDebit))
                 ->description('মূল খরচ: ৳' . number_format($totalDebitAmount) . ' | অতিরিক্ত: ৳' . number_format($totalExtraCost))
                 ->descriptionIcon('heroicon-m-arrow-trending-down')
-                ->color('danger'),
+                ->color('danger')
+                ->columnSpan([
+                    'default' => 2, // মোবাইলে Full Width
+                    'md' => 2,      // ডেস্কটপে ১/৩ অংশ
+                ]),
 
-            // 📅 কার্ড ৩: আজকের লাইভ ট্র্যাকিং
             Stat::make('আজকের তারিখ', Carbon::now()->format('d M, Y'))
                 ->description('আজকের জমা: ৳' . number_format($todayCredit) . ' | খরচ: ৳' . number_format($todayTotalDebit))
                 ->descriptionIcon('heroicon-m-clock')
-                ->color('info'),
+                ->color('info')
+                ->columnSpan([
+                    'default' => 2, // মোবাইলে Full Width
+                    'md' => 2,      // ডেস্কটপে ১/৩ অংশ
+                ]),
         ];
     }
 }
