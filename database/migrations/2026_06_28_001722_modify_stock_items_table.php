@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('stock_items', function (Blueprint $table) {
-            //
+            // কলামটি ড্রপ করে দেওয়া কারণ এটি এখন অপ্রয়োজনীয়
+            $table->dropColumn('stock_type_id'); 
         });
     }
 
