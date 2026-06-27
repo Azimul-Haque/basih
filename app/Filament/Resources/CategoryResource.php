@@ -28,7 +28,39 @@ class CategoryResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Forms\Components\Section::make('খাত বা ক্যাটাগরির বিবরণ')
+                    ->schema([
+                        Forms\Components\TextInput::make('name')
+                            ->label('খাতের নাম')
+                            ->placeholder('যেমন: ক্যাশ, ব্যাংক লোন, যাতায়াত খরচ, ভুট্টা স্টক')
+                            ->required()
+                            ->columnSpan(['default' => 12, 'md' => 6]),
+
+                        Forms\Components\ToggleButtons::make('type')
+                            ->label('ধরণ')
+                            ->options([
+                                'credit' => 'জমা (Credit)',
+                                'debit' => 'খরচ (Debit)',
+                            ])
+                            ->colors([
+                                'credit' => 'success',
+                                'debit' => 'danger',
+                            ])
+                            ->inline()
+                            ->required()
+                            ->default('credit')
+                            ->live() // Instantly reveals dependent inputs
+                            ->columnSpan(['default' => 12, 'md' => 6]),
+                            
+                        // Dynamic Toggle: Only slides open if the type is explicitly set to Debit (খরচ)
+                        Forms\Components\Toggle::make('is_stock')
+                            ->label('এটি কি স্টকের খাত?')
+                            ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের ধরণ ও একক এন্ট্রি করতে হবে।')
+                            ->default(false)
+                            ->live()
+                            ->visible(fn (Forms\Get $get) => $get('type') === 'debit')
+                            ->columnSpan(12),
+                    ])->columns(12),
             ]);
     }
 
