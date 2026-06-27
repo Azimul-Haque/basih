@@ -46,8 +46,8 @@ class LedgerOverview extends BaseWidget
 
         return [
             // 💳 কার্ড ১: মোট জমা ও বর্তমান ব্যালেন্স
-            Stat::make('Total Capital / জমা', '৳ ' . number_format($totalCredit))
-                ->description('বর্তমান ক্যাশ ব্যালেন্স: ৳ ' . number_format($currentBalance))
+            Stat::make('বর্তমান ক্যাশ ব্যালেন্স: ৳', '৳ ' . number_format($currentBalance))
+                ->description('Total Capital / জমা' . number_format($totalCredit))
                 ->descriptionIcon('heroicon-m-wallet')
                 ->color($currentBalance >= 0 ? 'success' : 'danger'),
 
