@@ -54,7 +54,7 @@ class LedgerOverview extends BaseWidget
             // 🟢 কার্ড এ: জমা খাতা (Clickable)
             Stat::make(' ', '➡️ জমা খাতা')
                 ->description('সকল জমার বিবরণী দেখতে এখানে ক্লিক করুন')
-                ->descriptionIcon('heroicon-m-arrow-up-right')
+                ->descriptionIcon('heroicon-o-arrow-trending-up')
                 ->color('success')
                 ->url(url('admin/transactions/credits')) // জমা খাতার কাস্টম পেজ লিংক
                 ->extraAttributes([
@@ -65,7 +65,7 @@ class LedgerOverview extends BaseWidget
             // 🔴 কার্ড বি: খরচ খাতা (Clickable)
             Stat::make(' ', '➡️ খরচ খাতা')
                 ->description('সকল খরচের বিবরণী দেখতে এখানে ক্লিক করুন')
-                ->descriptionIcon('heroicon-m-arrow-down-right')
+                ->descriptionIcon('heroicon-o-arrow-trending-down')
                 ->color('danger')
                 ->url(url('admin/transactions/debits')) // খরচ খাতার কাস্টম পেজ লিংক
                 ->extraAttributes([
