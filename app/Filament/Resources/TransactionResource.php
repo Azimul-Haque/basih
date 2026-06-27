@@ -503,11 +503,12 @@ class TransactionResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListTransactions::class, // মূল অল-ইন-ওয়ান তালিকা (ঐচ্ছিক)
-            'credits' => Pages\ManageCredits::route('/credits'), // স্ল্যাগ রুট ম্যাপ
-            'debits' => Pages\ManageDebits::route('/debits'),    // স্ল্যাগ রুট ম্যাপ
-            'create' => Pages\CreateTransaction::class,
-            'edit' => Pages\EditTransaction::class,
+            // 🔥 নিশ্চিত করুন যে প্রত্যেকটি পৃষ্ঠার শেষে '::route()' মেথডটি সঠিকভাবে চেইন করা আছে
+            'index' => Pages\ListTransactions::route('/'), 
+            'credits' => Pages\ManageCredits::route('/credits'),
+            'debits' => Pages\ManageDebits::route('/debits'),
+            'create' => Pages\CreateTransaction::route('/create'),
+            'edit' => Pages\EditTransaction::route('/{record}/edit'),
         ];
     }
 
