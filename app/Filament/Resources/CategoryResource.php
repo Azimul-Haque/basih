@@ -24,6 +24,8 @@ class CategoryResource extends Resource
     protected static ?string $modelLabel = 'ক্যাটাগরি/খাত';
     protected static ?string $pluralModelLabel = 'জমা-খরচের ধরণ';
 
+    // Inside app/Filament/Resources/CategoryResource.php -> form() method:
+
     public static function form(Form $form): Form
     {
         return $form
@@ -34,6 +36,16 @@ class CategoryResource extends Resource
                             ->label('খাতের নাম')
                             ->placeholder('যেমন: ক্যাশ, ব্যাংক লোন, যাতায়াত খরচ, ভুট্টা স্টক')
                             ->required()
+                            // 🔥 THE UNIQUE RULE FOR STANDALONE MANAGER:
+                            ->unique(
+                                table: 'categories',
+                                column: 'name',
+                                modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Forms\Get $get) {
+                                    $selectedType = $get('type') ?? 'credit';
+                                    return $rule->where('type', $selectedType);
+                                },
+                                ignoringRecord: true // Crucial so editing an existing record doesn't throw an error
+                            )
                             ->columnSpan(['default' => 12, 'md' => 6]),
 
                         Forms\Components\ToggleButtons::make('type')
@@ -49,10 +61,9 @@ class CategoryResource extends Resource
                             ->inline()
                             ->required()
                             ->default('credit')
-                            ->live() // Instantly reveals dependent inputs
+                            ->live() 
                             ->columnSpan(['default' => 12, 'md' => 6]),
                             
-                        // Dynamic Toggle: Only slides open if the type is explicitly set to Debit (খরচ)
                         Forms\Components\Toggle::make('is_stock')
                             ->label('এটি কি স্টকের খাত?')
                             ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের ধরণ ও একক এন্ট্রি করতে হবে।')
