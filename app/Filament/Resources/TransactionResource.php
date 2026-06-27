@@ -12,7 +12,6 @@ use App\Models\Category;
 use App\Models\StockType;
 use App\Models\Unit;
 
-
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -53,7 +52,7 @@ class TransactionResource extends Resource
                             ->inline()
                             ->required()
                             ->default('credit') // Auto-selects "জমা" on initial form render
-                            ->live()            // Re-triggers the option array block on click
+                            ->live()            // 🔥 Re-triggers form lifecycle evaluation on touch
                             ->afterStateUpdated(fn ($set) => $set('category_id', null)) // Resets choice on toggle
                             ->columnSpan(['default' => 12, 'md' => 4]),
 
@@ -61,12 +60,13 @@ class TransactionResource extends Resource
                             ->label('খাত / ক্যাটাগরি')
                             ->required()
                             ->searchable()
-                            ->preload() // Safe to preload now since it's a fixed array lookup
-                            // 🔥 THE DIRECT ELOQUENT LOOKUP: Fetches straight from your entries table
+                            // ❌ ->preload() COMPLETELY REMOVED FROM HERE TO PREVENT COLD COMPONENT DROPDOWN FREEZING
+                            ->live() // Keep tracking component context mutations 
+                            // 🔥 THE SECURE EVALUATION PLUCK ENGINE
                             ->options(function (Forms\Get $get) {
                                 $selectedType = $get('type') ?? 'credit';
                                 
-                                return \App\Models\Category::where('type', $selectedType)
+                                return Category::where('type', $selectedType)
                                     ->pluck('name', 'id')
                                     ->toArray();
                             })
@@ -92,13 +92,13 @@ class TransactionResource extends Resource
                         if (!$categoryId) return false;
                         
                         // Look up the actual category model directly
-                        $category = \App\Models\Category::find($categoryId);
+                        $category = Category::find($categoryId);
                         return $category && $category->is_stock;
                     })
                     ->schema([
                         Forms\Components\Select::make('stock_type_id')
                             ->label('স্টকের ধরণ (পণ্যের নাম)')
-                            ->options(\App\Models\StockType::pluck('name', 'id'))
+                            ->options(StockType::pluck('name', 'id'))
                             ->searchable()
                             ->preload()
                             ->required()
@@ -106,7 +106,7 @@ class TransactionResource extends Resource
 
                         Forms\Components\Select::make('unit_id')
                             ->label('পরিমাপের একক')
-                            ->options(\App\Models\Unit::pluck('name', 'id'))
+                            ->options(Unit::pluck('name', 'id'))
                             ->searchable()
                             ->preload()
                             ->required()
