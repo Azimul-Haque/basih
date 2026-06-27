@@ -72,15 +72,12 @@ class TransactionResource extends Resource
                             ])
                             // 🔥 THE FIX: Capture data right before it hits the database and inject parent type manually
                             ->createOptionUsing(function (array $data, Forms\Get $get) {
-                                // Grab the parent form's current active layout type choice 
-                                $parentType = $get('type');
-                                
                                 $category = Category::create([
                                     'name' => $data['name'],
-                                    'type' => $parentType, // Automatically falls back cleanly
+                                    'type' => $get('type'), 
                                 ]);
 
-                                return $category->id;
+                                return $category->id; // <-- Forces Filament to auto-select it instantly!
                             })
                             ->columnSpan(['default' => 12, 'md' => 4]),
 
