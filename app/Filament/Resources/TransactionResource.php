@@ -517,7 +517,7 @@ class TransactionResource extends Resource
             NavigationItem::make('জমা খাতা')
                 ->label('জমা খাতা')
                 ->icon('heroicon-o-arrow-trending-up')
-                ->url(fn (): string => static::getUrl('credits')) // <--- fn() ক্লোজার ব্যবহার করা নিরাপদ
+                ->url(fn (): string => static::getUrl('credits'))
                 ->isActiveWhen(fn () => request()->routeIs('filament.admin.resources.transactions.credits'))
                 ->sort(2),
 
