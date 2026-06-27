@@ -52,7 +52,7 @@ class TransactionResource extends Resource
                             ->inline()
                             ->required()
                             ->default('credit') // Auto-selects "জমা" on initial form render
-                            ->live()            // 🔥 Re-triggers form lifecycle evaluation on touch
+                            ->live()            // Re-triggers form lifecycle evaluation on touch
                             ->afterStateUpdated(fn ($set) => $set('category_id', null)) // Resets choice on toggle
                             ->columnSpan(['default' => 12, 'md' => 4]),
 
@@ -60,15 +60,28 @@ class TransactionResource extends Resource
                             ->label('খাত / ক্যাটাগরি')
                             ->required()
                             ->searchable()
-                            // ❌ ->preload() COMPLETELY REMOVED FROM HERE TO PREVENT COLD COMPONENT DROPDOWN FREEZING
                             ->live() // Keep tracking component context mutations 
-                            // 🔥 THE SECURE EVALUATION PLUCK ENGINE
+                            // The secure evaluation array pluck engine
                             ->options(function (Forms\Get $get) {
                                 $selectedType = $get('type') ?? 'credit';
                                 
                                 return Category::where('type', $selectedType)
                                     ->pluck('name', 'id')
                                     ->toArray();
+                            })
+                            // 🔥 POPUP MODAL RETURN REALTIME INJECTION
+                            ->createOptionForm([
+                                Forms\Components\TextInput::make('name')
+                                    ->label('নতুন খাতের নাম')
+                                    ->required(),
+                            ])
+                            ->createOptionUsing(function (array $data, Forms\Get $get) {
+                                $category = Category::create([
+                                    'name' => $data['name'],
+                                    'type' => $get('type') ?? 'credit', // Securely inherits context
+                                ]);
+
+                                return $category->id; // Auto-selects it instantly without drop loops!
                             })
                             ->columnSpan(['default' => 12, 'md' => 4]),
 
@@ -102,6 +115,11 @@ class TransactionResource extends Resource
                             ->searchable()
                             ->preload()
                             ->required()
+                            // 🔥 ADD ON THE GO FOR COMMODITY NAME
+                            ->createOptionForm([
+                                Forms\Components\TextInput::make('name')->label('নতুন পণ্যের নাম')->required(),
+                            ])
+                            ->createOptionUsing(fn (array $data) => StockType::create($data)->id)
                             ->columnSpan(['default' => 12, 'md' => 4]),
 
                         Forms\Components\Select::make('unit_id')
@@ -110,6 +128,11 @@ class TransactionResource extends Resource
                             ->searchable()
                             ->preload()
                             ->required()
+                            // 🔥 ADD ON THE GO FOR MEASUREMENT UNITS
+                            ->createOptionForm([
+                                Forms\Components\TextInput::make('name')->label('নতুন পরিমাপের একক')->required(),
+                            ])
+                            ->createOptionUsing(fn (array $data) => Unit::create($data)->id)
                             ->columnSpan(['default' => 12, 'md' => 4]),
 
                         Forms\Components\TextInput::make('quantity')
