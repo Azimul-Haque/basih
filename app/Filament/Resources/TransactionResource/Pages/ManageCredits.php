@@ -4,10 +4,25 @@ namespace App\Filament\Resources\TransactionResource\Pages;
 
 use App\Filament\Resources\TransactionResource;
 use Filament\Resources\Pages\Page;
+use Filament\Tables\Concerns\IntersectsWithTables;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
 
-class ManageCredits extends Page
+class ManageCredits extends Page implements HasTable
 {
+    use IntersectsWithTables;
+
     protected static string $resource = TransactionResource::class;
 
     protected static string $view = 'filament.resources.transaction-resource.pages.manage-credits';
+
+    protected static ?string $title = 'জমা খাতা (Credit)';
+
+    public function table(Table $table): Table
+    {
+        // 🔥 মূল টেবিল স্ট্রাকচার কল করে শুধু 'credit' (বিক্রয়/জমা) ডাটা ফিল্টার করা হলো
+        return TransactionResource::table($table)
+            ->modifyQueryUsing(fn ($query) => $query->where('type', 'credit'))
+            ->heading('সকল জমার তালিকা');
+    }
 }
