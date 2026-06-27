@@ -19,6 +19,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 use App\Filament\Widgets\LedgerOverview;
+use Filament\Pages\Dashboard;
 
 class AdminPanelProvider extends PanelProvider
 {
