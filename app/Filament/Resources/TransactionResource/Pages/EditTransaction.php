@@ -40,6 +40,19 @@ class EditTransaction extends EditRecord
 {
     protected static string $resource = TransactionResource::class;
 
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\DeleteAction::make(),
+        ];
+    }
+
+    // 🔥 ADD THIS METHOD TO REDIRECT AFTER SAVING EDITS
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+
     protected function afterSave(): void
     {
         $record = $this->record;
