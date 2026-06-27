@@ -15,7 +15,11 @@ class ManageDebits extends ListRecords
 
     protected function getTableQuery(): ?Builder
     {
-        return static::getResource()::getEloquentQuery()->where('type', 'debit');
+        // 🔥 type='debit' ফিল্টার করার পাশাপাশি তারিখ অনুযায়ী DESC অর্ডার লক করা হলো
+        return static::getResource()::getEloquentQuery()
+            ->where('type', 'debit')
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc');
     }
 
     // 🔥 খরচ খাতার ডান কোণায় "খরচ করুন" বাটন
