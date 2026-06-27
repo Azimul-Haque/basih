@@ -71,12 +71,12 @@ class TransactionResource extends Resource
                                 Forms\Components\TextInput::make('name')
                                     ->label('নতুন খাতের নাম')
                                     ->required()
-                                    // 🔥 FIXED: Uses standard parameter injection to fetch parent layout data securely
                                     ->unique(
                                         table: 'categories',
                                         column: 'name',
                                         modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Forms\Get $get) {
-                                            $parentType = $get('type') ?? 'credit';
+                                            // 🔥 LOOK UPWARDS: Grabs transaction type from background page for unique checks
+                                            $parentType = $get('../../type') ?? 'credit';
                                             return $rule->where('type', $parentType);
                                         }
                                     ),
@@ -85,11 +85,12 @@ class TransactionResource extends Resource
                                     ->label('এটি কি স্টকের খাত?')
                                     ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের ধরণ ও একক এন্ট্রি করতে হবে।')
                                     ->default(false)
-                                    // 🔥 FIXED: Reads parent toggle button straight out of state hooks
-                                    ->visible(fn (Forms\Get $get) => $get('type') === 'debit'),
+                                    // 🔥 THE SCOPING FIX: Escapes modal container to check main form state
+                                    ->visible(fn (Forms\Get $get) => $get('../../type') === 'debit'),
                             ])
                             ->createOptionUsing(function (array $data, Forms\Get $get) {
-                                $parentType = $get('type') ?? 'credit';
+                                // 🔥 LOOK UPWARDS: Ensures category saves with correct context type
+                                $parentType = $get('../../type') ?? 'credit';
 
                                 $category = Category::create([
                                     'name' => $data['name'],
