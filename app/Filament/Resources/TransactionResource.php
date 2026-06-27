@@ -52,7 +52,7 @@ class TransactionResource extends Resource
                             ])
                             ->inline()
                             ->required()
-                            ->reactive()
+                            ->live() // Ensures instant state sync
                             ->afterStateUpdated(fn ($set) => $set('category_id', null))
                             ->columnSpan(['default' => 12, 'md' => 4]),
 
@@ -65,22 +65,22 @@ class TransactionResource extends Resource
                             ->preload()
                             ->required()
                             ->live()
-                            // Intercepts modal initialization and binds parent type state cleanly
-                            ->createOptionAction(function (Forms\Components\Actions\Action $action, Forms\Get $get) {
-                                return $action->mutateFormComponentUsing(function (Forms\Components\Component $component) use ($get) {
-                                    $component->state(['type' => $get('type')]);
-                                });
-                            })
                             ->createOptionForm([
                                 Forms\Components\TextInput::make('name')
                                     ->label('নতুন খাতের নাম')
                                     ->required(),
-                                    
-                                Forms\Components\Hidden::make('type')
-                                    ->required(),
                             ])
-                            ->createOptionUsing(function (array $data) {
-                                return Category::create($data)->id;
+                            // 🔥 THE FIX: Capture data right before it hits the database and inject parent type manually
+                            ->createOptionUsing(function (array $data, Forms\Get $get) {
+                                // Grab the parent form's current active layout type choice 
+                                $parentType = $get('type');
+                                
+                                $category = Category::create([
+                                    'name' => $data['name'],
+                                    'type' => $parentType, // Automatically falls back cleanly
+                                ]);
+
+                                return $category->id;
                             })
                             ->columnSpan(['default' => 12, 'md' => 4]),
 
