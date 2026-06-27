@@ -302,9 +302,9 @@ class TransactionResource extends Resource
                             ->createOptionUsing(fn (array $data) => \App\Models\Unit::create($data)->id)
                             ->columnSpan(['default' => 12, 'md' => 6]),
 
-                        // ২. মালের পরিমাণ (ডাইনামিক আপার লিমিট এবং লাইভ স্টক হিন্টসহ)
+                        // ২. ইউনিটের পরিমাণ (ডাইনামিক আপার লিমিট এবং লাইভ স্টক হিন্টসহ)
                         Forms\Components\TextInput::make('quantity')
-                            ->label('মালের পরিমাণ')
+                            ->label('ইউনিটের পরিমাণ')
                             ->numeric()
                             ->required()
                             ->hint(function (Forms\Get $get, $record) {
@@ -407,7 +407,7 @@ class TransactionResource extends Resource
                             ->searchable()
                             ->size('md'),
 
-                        // 🔥 নতুন: যদি ক্যাটাগরি স্টকের হয়, তবেই মালের পরিমাণ ও একক লাইভ দেখাবে
+                        // 🔥 নতুন: যদি ক্যাটাগরি স্টকের হয়, তবেই ইউনিটের পরিমাণ ও একক লাইভ দেখাবে
                         Tables\Columns\TextColumn::make('stockItem.quantity')
                             ->formatStateUsing(function ($state, $record) {
                                 // 🔥 $record null হলে বা ক্যাটাগরি না থাকলে ক্র্যাশ এড়াতে সেফটি চেক
