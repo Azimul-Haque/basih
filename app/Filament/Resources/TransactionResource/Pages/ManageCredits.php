@@ -14,6 +14,8 @@ class ManageCredits extends Page implements HasTable
 
     protected static string $resource = TransactionResource::class;
 
+    protected static ?string $navigationLabel = 'জমা খাতা';
+
     protected static string $view = 'filament.resources.transaction-resource.pages.manage-credits';
 
     protected static ?string $title = 'জমা খাতা (Credit)';
