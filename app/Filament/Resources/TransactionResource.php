@@ -51,9 +51,9 @@ class TransactionResource extends Resource
                             ])
                             ->inline()
                             ->required()
-                            ->default('credit') // Auto-selects "জমা" on initial form render
-                            ->live()            // Re-triggers form lifecycle evaluation on touch
-                            ->afterStateUpdated(fn ($set) => $set('category_id', null)) // Resets choice on toggle
+                            ->default('credit')
+                            ->live()            
+                            ->afterStateUpdated(fn ($set) => $set('category_id', null)) 
                             ->columnSpan(['default' => 12, 'md' => 4]),
 
                         Forms\Components\Select::make('category_id')
@@ -64,31 +64,40 @@ class TransactionResource extends Resource
                             ->options(function (Forms\Get $get) {
                                 $selectedType = $get('type') ?? 'credit';
                                 
+                                // DEBIT MODE: Show normal items and append [স্টক] if it tracks items
                                 if ($selectedType === 'debit') {
                                     $debitCategories = Category::where('type', 'debit')->get();
                                     
                                     $debitOptions = [];
                                     foreach ($debitCategories as $cat) {
-                                        if ($cat->is_stock) {
-                                            $debitOptions[$cat->id] = $cat->name . ' [স্টক]'; // যেমন: ভুট্টা ক্রয় [স্টক]
-                                        } else {
-                                            $debitOptions[$cat->id] = $cat->name; // সাধারণ খরচ
-                                        }
+                                        $debitOptions[$cat->id] = $cat->is_stock ? $cat->name . ' [স্টক]' : $cat->name;
                                     }
                                     return $debitOptions;
                                 }
 
+                                // CREDIT MODE: Only show standard income OR stock categories with active warehouse items
                                 $standardCredits = Category::where('type', 'credit')->pluck('name', 'id')->toArray();
                                 $stockDebits = Category::where('type', 'debit')->where('is_stock', true)->get();
 
                                 $salesOptions = [];
                                 foreach ($stockDebits as $cat) {
-                                    $salesOptions[$cat->id] = $cat->name . ' [বিক্রয়]';
+                                    // Cumulative stock logic
+                                    $totalPurchased = \App\Models\Transaction::where('category_id', $cat->id)->where('type', 'debit')->sum('quantity');
+                                    $totalSold = \App\Models\Transaction::where('category_id', $cat->id)->where('type', 'credit')->sum('quantity');
+                                    $currentStock = $totalPurchased - $totalSold;
+
+                                    // 🔥 HIDE IF 0: Only append to dropdown if physical stock is above zero
+                                    if ($currentStock > 0) {
+                                        // Fetch last used unit name for clean displaying
+                                        $lastTx = \App\Models\Transaction::where('category_id', $cat->id)->latest()->first();
+                                        $unitLabel = $lastTx && $lastTx->unit ? $lastTx->unit->name : 'একক';
+
+                                        $salesOptions[$cat->id] = $cat->name . ' - বিক্রয় (মজুদ: ' . number_format($currentStock) . ' ' . $unitLabel . ')';
+                                    }
                                 }
 
                                 return $standardCredits + $salesOptions;
                             })
-                            // 🔥 ALWAYS ENABLED: Returns the form array for both types dynamically
                             ->createOptionForm([
                                 Forms\Components\TextInput::make('name')
                                     ->label('নতুন খাতের নাম')
@@ -105,9 +114,8 @@ class TransactionResource extends Resource
 
                                 Forms\Components\Toggle::make('is_stock')
                                     ->label('এটি কি স্টকের খাত?')
-                                    ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের ধরণ ও একক এন্ট্রি করতে হবে।')
+                                    ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের পরিমাণ ও পরিমাপের একক এন্ট্রি করতে হবে।')
                                     ->default(false)
-                                    // 🔥 THE GATEKEEPER: Only renders this toggle if the underlying page is on Debit
                                     ->visible(function (Forms\Components\Toggle $component) {
                                         $livewireData = $component->getLivewire()->data;
                                         return ($livewireData['type'] ?? 'credit') === 'debit';
@@ -120,7 +128,6 @@ class TransactionResource extends Resource
                                 $category = Category::create([
                                     'name' => $data['name'],
                                     'type' => $parentType, 
-                                    // Saves false naturally if the field was hidden (Credit context)
                                     'is_stock' => $data['is_stock'] ?? false, 
                                 ]);
 
@@ -133,37 +140,20 @@ class TransactionResource extends Resource
                             ->numeric()
                             ->prefix('৳')
                             ->required()
-                            // খরচ (Debit) সিলেক্টেড থাকলে ছোট আকারে বর্তমান সর্বোচ্চ ব্যালেন্স দেখাবে
                             ->hint(function (Forms\Get $get) {
-                                $type = $get('type') ?? 'credit';
-                                if ($type !== 'debit') {
-                                    return null;
-                                }
+                                if (($get('type') ?? 'credit') !== 'debit') return null;
 
-                                // রিয়েল-টাইম ব্যালেন্স হিসাব
                                 $totalCredit = \App\Models\Transaction::where('type', 'credit')->sum('amount');
                                 $totalDebit = \App\Models\Transaction::where('type', 'debit')->sum('amount');
-                                $availableBalance = $totalCredit - $totalDebit;
-
-                                return 'বর্তমান সর্বোচ্চ ব্যালেন্স: ৳' . number_format($availableBalance);
+                                return 'বর্তমান সর্বোচ্চ ব্যালেন্স: ৳' . number_format($totalCredit - $totalDebit);
                             })
-                            ->hintColor('warning') // হালকা এবং নজরকাড়া কালার
-                            
-                            // DYNAMIC VALIDATION: Limits Debit to Total Available Balance
+                            ->hintColor('warning') 
                             ->rules(function (Forms\Get $get) {
-                                $type = $get('type') ?? 'credit';
-
-                                if ($type === 'credit') {
-                                    return [];
-                                }
+                                if (($get('type') ?? 'credit') === 'credit') return [];
 
                                 $totalCredit = \App\Models\Transaction::where('type', 'credit')->sum('amount');
                                 $totalDebit = \App\Models\Transaction::where('type', 'debit')->sum('amount');
-                                $availableBalance = $totalCredit - $totalDebit;
-
-                                return [
-                                    'max:' . $availableBalance,
-                                ];
+                                return ['max:' . ($totalCredit - $totalDebit)];
                             })
                             ->validationMessages([
                                 'max' => 'আপনার ক্যাশে পর্যাপ্ত টাকা নেই! বর্তমান সর্বোচ্চ ব্যালেন্স: ৳:max',
@@ -175,13 +165,13 @@ class TransactionResource extends Resource
                             ->columnSpan(['default' => 12, 'md' => 6]),
                     ])->columns(12),
 
-                // 🔥 STOCKS SUB-FORM PANEL: Now loads for both buying and selling dynamically
+                // 🔥 COMPACT STOCKS SUB-FORM PANEL (With stock_type_id removed entirely)
                 Forms\Components\Section::make(function (Forms\Get $get) {
                     return ($get('type') ?? 'credit') === 'debit' 
                         ? '📦 স্টক / ইনভেন্টরি বিবরণী (ক্রয় / মাল প্রাপ্তি)' 
                         : '📦 স্টক / ইনভেন্টরি বিবরণী (বিক্রয় / মাল খালাস)';
                 })
-                    ->description('পণ্য ক্রয় বা বিক্রয়ের অতিরিক্ত তথ্য এখানে পূরণ করুন।')
+                    ->description('পণ্য পরিমাণ ও একক সংক্রান্ত অতিরিক্ত তথ্য এখানে পূরণ করুন।')
                     ->visible(function (Forms\Get $get) {
                         $categoryId = $get('category_id');
                         if (!$categoryId) return false;
@@ -190,46 +180,46 @@ class TransactionResource extends Resource
                         return $category && $category->is_stock;
                     })
                     ->schema([
-                        // Forms\Components\Select::make('stock_type_id')
-                        //     // 🔥 Adds dynamic [ক্রয়] or [বিক্রয়] helper label to make inputs explicit
-                        //     ->label(fn (Forms\Get $get) => ($get('type') ?? 'credit') === 'debit' ? 'স্টকের ধরণ (পণ্যের নাম) [ক্রয়]' : 'স্টকের ধরণ (পণ্যের নাম) [বিক্রয়]')
-                        //     ->options(StockType::pluck('name', 'id'))
-                        //     ->searchable()
-                        //     ->preload()
-                        //     ->required()
-                        //     // ADD ON THE GO FOR COMMODITY NAME
-                        //     ->createOptionForm([
-                        //         Forms\Components\TextInput::make('name')->label('নতুন পণ্যের নাম')->required(),
-                        //     ])
-                        //     ->createOptionUsing(fn (array $data) => StockType::create($data)->id)
-                        //     ->columnSpan(['default' => 12, 'md' => 4]),
-
                         Forms\Components\Select::make('unit_id')
                             ->label('পরিমাপের একক')
-                            ->options(Unit::pluck('name', 'id'))
+                            ->options(\App\Models\Unit::pluck('name', 'id'))
                             ->searchable()
                             ->preload()
                             ->required()
-                            // ADD ON THE GO FOR MEASUREMENT UNITS
                             ->createOptionForm([
                                 Forms\Components\TextInput::make('name')->label('নতুন পরিমাপের একক')->required(),
                             ])
-                            ->createOptionUsing(fn (array $data) => Unit::create($data)->id)
-                            ->columnSpan(['default' => 12, 'md' => 4]),
+                            ->createOptionUsing(fn (array $data) => \App\Models\Unit::create($data)->id)
+                            ->columnSpan(['default' => 12, 'md' => 6]),
 
                         Forms\Components\TextInput::make('quantity')
                             ->label('মালের পরিমাণ')
                             ->numeric()
                             ->required()
-                            ->columnSpan(['default' => 12, 'md' => 4]),
+                            // 🔥 STRICT CEILING LIMIT ENFORCEMENT ON SALES
+                            ->rules(function (Forms\Get $get) {
+                                if (($get('type') ?? 'credit') === 'debit') return [];
+
+                                $categoryId = $get('category_id');
+                                if (!$categoryId) return [];
+
+                                $totalPurchased = \App\Models\Transaction::where('category_id', $categoryId)->where('type', 'debit')->sum('quantity');
+                                $totalSold = \App\Models\Transaction::where('category_id', $categoryId)->where('type', 'credit')->sum('quantity');
+                                
+                                return ['max:' . ($totalPurchased - $totalSold)];
+                            })
+                            ->validationMessages([
+                                'max' => 'গুদামে পর্যাপ্ত মাল নেই! সর্বোচ্চ বিক্রয়যোগ্য পরিমাণ: :max',
+                            ])
+                            ->columnSpan(['default' => 12, 'md' => 6]),
 
                         Forms\Components\TextInput::make('extra_cost')
                             ->label('অতিরিক্ত খরচ (পরিবহন/লেবার)')
                             ->numeric()
                             ->prefix('৳')
                             ->default(0)
-                            ->visible(fn (Forms\Get $get) => $get('type') === 'debit') // Only show extra cost on buying
-                            ->columnSpan(['default' => 12, 'md' => 12]),
+                            ->visible(fn (Forms\Get $get) => $get('type') === 'debit') 
+                            ->columnSpan(12),
                     ])->columns(12)
             ]);
     }
