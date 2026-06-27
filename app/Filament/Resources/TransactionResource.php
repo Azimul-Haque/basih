@@ -28,6 +28,7 @@ class TransactionResource extends Resource
     protected static ?int $navigationSort = 2;
     protected static ?string $modelLabel = 'লেনদেন';
     protected static ?string $pluralModelLabel = 'লেনদেন খাতা';
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function form(Form $form): Form
     {
