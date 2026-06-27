@@ -245,14 +245,18 @@ class TransactionResource extends Resource
                             ])
                             ->columnSpan(['default' => 12, 'md' => 6]),
 
-                        Forms\Components\TextInput::make('extra_cost') // <--- ডট নোটেশন ছাড়া সাধারণ নাম
+                        Forms\Components\TextInput::make('extra_cost')
                             ->label('অতিরিক্ত খরচ (পরিবহন/লেবার)')
                             ->numeric()
                             ->prefix('৳')
                             ->default(0)
+                            // 🔥 FIXED: Looks at the top-level absolute form layout context to verify type
                             ->visible(function (Forms\Get $get) {
+                                // Step out twice from the nested relationship tree container state structure
                                 $livewireData = $get('../../') ?? [];
-                                return (data_get($livewireData, 'type') ?? 'credit') === 'debit';
+                                $type = data_get($livewireData, 'type') ?? request()->input('components.0.snapshot.data.data.type') ?? 'credit';
+                                
+                                return $type === 'debit';
                             })
                             ->columnSpan(12),
                     ])->columns(12)
