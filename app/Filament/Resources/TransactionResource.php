@@ -479,7 +479,23 @@ class TransactionResource extends Resource
                 // 🔥 ফিল্টার ১: খাত/ক্যাটাগরি ফিল্টার ড্রপডাউন
                 Tables\Filters\SelectFilter::make('category_id')
                     ->label('খাত অনুযায়ী ফিল্টার')
-                    ->options(\App\Models\Category::pluck('name', 'id'))
+                    ->options(function () {
+                        // কারেন্ট ইউআরএল বা রুট থেকে ট্রানজেকশনের ধরন (type) ট্র্যাক করা
+                        $currentUrl = request()->url();
+                        
+                        if (str_contains($currentUrl, 'credits')) {
+                            // জমা খাতার জন্য: শুধুমাত্র credit টাইপের ক্যাটাগরিগুলো দেখাবে
+                            return \App\Models\Category::where('type', 'credit')
+                                ->pluck('name', 'id');
+                        } elseif (str_contains($currentUrl, 'debits')) {
+                            // খরচ খাতার জন্য: শুধুমাত্র debit টাইপের ক্যাটাগরিগুলো দেখাবে
+                            return \App\Models\Category::where('type', 'debit')
+                                ->pluck('name', 'id');
+                        }
+
+                        // গ্লোবাল ফলব্যাক (যদি কোনো কারণে টাইপ না পাওয়া যায়)
+                        return \App\Models\Category::pluck('name', 'id');
+                    })
                     ->searchable()
                     ->preload(),
 
