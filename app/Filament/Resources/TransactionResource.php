@@ -106,6 +106,7 @@ class TransactionResource extends Resource
                             ->searchable()
                             ->preload()
                             ->required()
+                            ->live()
                             ->createOptionForm([
                                 Forms\Components\TextInput::make('name')->label('নতুন পণ্যের নাম')->required(),
                             ])
