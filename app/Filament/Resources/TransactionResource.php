@@ -62,7 +62,6 @@ class TransactionResource extends Resource
                                 Category::where('type', $get('type'))->pluck('name', 'id')
                             )
                             ->searchable()
-                            ->preload()
                             ->required()
                             ->live()
                             ->createOptionForm([
@@ -107,7 +106,6 @@ class TransactionResource extends Resource
                             ->label('স্টকের ধরণ (পণ্যের নাম)')
                             ->options(StockType::pluck('name', 'id'))
                             ->searchable()
-                            ->preload()
                             ->required()
                             ->createOptionForm([
                                 Forms\Components\TextInput::make('name')->label('নতুন পণ্যের নাম')->required(),
@@ -119,7 +117,6 @@ class TransactionResource extends Resource
                             ->label('পরিমাপের একক')
                             ->options(Unit::pluck('name', 'id'))
                             ->searchable()
-                            ->preload()
                             ->required()
                             ->createOptionForm([
                                 Forms\Components\TextInput::make('name')
