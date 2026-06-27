@@ -58,9 +58,16 @@ class TransactionResource extends Resource
 
                         Forms\Components\Select::make('category_id')
                             ->label('খাত / ক্যাটাগরি')
-                            ->options(fn (Forms\Get $get) => 
-                                Category::where('type', $get('type'))->pluck('name', 'id')
-                            )
+                            ->options(function (Forms\Get $get) {
+                                $type = $get('type');
+                                
+                                // If no type is selected yet, return all categories as a safe fallback
+                                if (!$type) {
+                                    return Category::pluck('name', 'id');
+                                }
+                                
+                                return Category::where('type', $type)->pluck('name', 'id');
+                            })
                             ->searchable()
                             ->required()
                             ->live()
