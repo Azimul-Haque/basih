@@ -74,16 +74,14 @@ class TransactionResource extends Resource
                                 Forms\Components\TextInput::make('name')
                                     ->label('নতুন খাতের নাম')
                                     ->required()
-                                    // 🔥 THE UNIQUE RULE: Checks the 'categories' table where the 'type' column matches the parent selection
+                                    // 🔥 FIXED VALIDATION SYNTAX HERE
                                     ->unique(
                                         table: 'categories',
                                         column: 'name',
                                         modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Forms\Get $get) {
-                                            // Gets the active transaction type (credit or debit) from the main form
                                             $parentType = $get('../../type') ?? 'credit'; 
                                             return $rule->where('type', $parentType);
-                                        },
-                                        ignoringRecord: true
+                                        }
                                     ),
 
                                 Forms\Components\Toggle::make('is_stock')
