@@ -20,6 +20,7 @@ class Dashboard extends BaseDashboard
                 ->label('লেনদেন এন্ট্রি করুন')
                 ->icon('heroicon-m-plus')
                 ->color('success')
+                ->size('lg')
                 ->url(fn (): string => url('admin/transactions/create')), // লেনদেন ক্রিয়েট পেজের ইউআরএল
         ];
     }
