@@ -71,11 +71,6 @@ class UnitResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make()->label('সম্পাদনা'),
                 Tables\Actions\DeleteAction::make()->label('মুছুন'),
-            ])
-            ->bulkActions([
-                Tables\TablesActions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()->label('নির্বাচিতগুলো মুছুন'),
-                ]),
             ]);
     }
 
