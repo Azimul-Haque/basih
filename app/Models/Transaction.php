@@ -14,6 +14,7 @@ class Transaction extends Model
         'date' => 'date',
     ];
 
+    // 🔥 FORCE EXPLICIT FOREIGN KEY BINDING
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id');
@@ -21,6 +22,6 @@ class Transaction extends Model
 
     public function stockItem(): HasOne
     {
-        return $table->hasOne(StockItem::class);
+        return $this->hasOne(StockItem::class, 'transaction_id');
     }
 }
