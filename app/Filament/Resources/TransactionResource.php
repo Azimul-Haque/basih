@@ -78,17 +78,27 @@ class TransactionResource extends Resource
 
                                 $salesOptions = [];
                                 foreach ($stockDebits as $cat) {
-                                    // 🔥 SAFE GUARD CHECK: Fallback to 0 if schema columns are missing or named differently
+                                    // যদি ডাটাবেজে এখনো quantity কলামটি তৈরি না হয়ে থাকে, তবে ক্র্যাশ এড়াতে স্কিপ করবে
                                     if (!\Schema::hasColumn('transactions', 'quantity')) {
-                                        $salesOptions[$cat->id] = $cat->name . ' - বিক্রয় (মজুদ ট্র্যাকিং নিষ্ক্রিয়)';
                                         continue;
                                     }
 
-                                    $totalPurchased = \App\Models\Transaction::where('category_id', $cat->id)->where('type', 'debit')->sum('quantity');
-                                    $totalSold = \App\Models\Transaction::where('category_id', $cat->id)->where('type', 'credit')->sum('quantity');
+                                    // ১. এই ক্যাটাগরির মোট ক্রয় হিসাব (Debit)
+                                    $totalPurchased = \App\Models\Transaction::where('category_id', $cat->id)
+                                        ->where('type', 'debit')
+                                        ->sum('quantity');
+
+                                    // ২. এই ক্যাটাগরির মোট বিক্রয় হিসাব (Credit)
+                                    $totalSold = \App\Models\Transaction::where('category_id', $cat->id)
+                                        ->where('type', 'credit')
+                                        ->sum('quantity');
+
+                                    // ৩. বর্তমান প্রকৃত মজুদ হিসাব
                                     $currentStock = $totalPurchased - $totalSold;
 
+                                    // 🔥 কন্ডিশন: মজুদ যদি শুধুমাত্র ০ থেকে বেশি হয়, তবেই লিস্টে দেখাবে (যেমন: Maize দেখাবে, Wheat লুকানো থাকবে)
                                     if ($currentStock > 0) {
+                                        // সুন্দরভাবে পরিমাপের একক দেখানোর জন্য শেষ ট্রানজেকশন থেকে এককটি খুঁজে নেওয়া
                                         $lastTx = \App\Models\Transaction::where('category_id', $cat->id)->latest()->first();
                                         $unitLabel = $lastTx && $lastTx->unit ? $lastTx->unit->name : 'একক';
 
