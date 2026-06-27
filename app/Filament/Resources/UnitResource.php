@@ -27,7 +27,21 @@ class UnitResource extends Resource
     {
         return $form
             ->schema([
-                //
+                Forms\Components\Section::make('একক বিবরণী')
+                    ->description('স্টক পরিমাপের নতুন একক এখানে যুক্ত করুন।')
+                    ->schema([
+                        Forms\Components\TextInput::make('name')
+                            ->label('এককের নাম')
+                            ->placeholder('যেমন: বস্তা, কেজি, টন, মন, লিটার')
+                            ->required()
+                            ->unique(
+                                table: 'units',
+                                column: 'name',
+                                ignoreRecord: true // এডিট করার সময় যাতে ইউনিক ইরোর না দেখায়
+                            )
+                            ->maxLength(255)
+                            ->columnSpan(12),
+                    ])->columns(12),
             ]);
     }
 
