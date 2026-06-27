@@ -83,7 +83,7 @@ class TransactionResource extends Resource
 
                                 $salesOptions = [];
                                 foreach ($stockDebits as $cat) {
-                                    $salesOptions[$cat->id] = $cat->name . ' - বিক্রয়';
+                                    $salesOptions[$cat->id] = $cat->name . ' [বিক্রয়]';
                                 }
 
                                 return $standardCredits + $salesOptions;
