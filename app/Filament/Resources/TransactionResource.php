@@ -74,12 +74,13 @@ class TransactionResource extends Resource
                                 Forms\Components\TextInput::make('name')
                                     ->label('নতুন খাতের নাম')
                                     ->required()
-                                    // 🔥 FIXED VALIDATION SYNTAX HERE
                                     ->unique(
                                         table: 'categories',
                                         column: 'name',
-                                        modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Forms\Get $get) {
-                                            $parentType = $get('../../type') ?? 'credit'; 
+                                        modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Forms\Component $component) {
+                                            // 🔥 SAFELY GET THE TRANSACTION TYPE FROM THE BACKGROUND FORM
+                                            $mainFormState = $component->getContainer()->getParentComponent()->getLivewire()->data;
+                                            $parentType = $mainFormState['type'] ?? 'credit';
                                             return $rule->where('type', $parentType);
                                         }
                                     ),
@@ -88,15 +89,24 @@ class TransactionResource extends Resource
                                     ->label('এটি কি স্টকের খাত?')
                                     ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের ধরণ ও একক এন্ট্রি করতে হবে।')
                                     ->default(false)
-                                    ->visible(fn (Forms\Get $get) => $get('../../type') === 'debit'),
+                                    // 🔥 THE FIX: Look up the real active background state dynamically
+                                    ->visible(function (Forms\Component $component) {
+                                        $mainFormState = $component->getContainer()->getParentComponent()->getLivewire()->data;
+                                        return ($mainFormState['type'] ?? 'credit') === 'debit';
+                                    }),
                             ])
-                            ->createOptionUsing(function (array $data, Forms\Get $get) {
+                            ->createOptionUsing(function (array $data, Forms\Component $component) {
+                                // Grab the background form state during data submission
+                                $mainFormState = $component->getContainer()->getParentComponent()->getLivewire()->data;
+                                $parentType = $mainFormState['type'] ?? 'credit';
+
                                 $category = Category::create([
                                     'name' => $data['name'],
-                                    'type' => $get('type') ?? 'credit', // Securely inherits context
+                                    'type' => $parentType, 
+                                    'is_stock' => $data['is_stock'] ?? false,
                                 ]);
 
-                                return $category->id; // Auto-selects it instantly without drop loops!
+                                return $category->id; 
                             })
                             ->columnSpan(['default' => 12, 'md' => 4]),
 
