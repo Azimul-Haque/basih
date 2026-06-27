@@ -21,8 +21,6 @@ class TransactionResource extends Resource
     protected static ?string $modelLabel = 'লেনদেন';
     protected static ?string $pluralModelLabel = 'লেনদেন খাতা';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-
     public static function form(Form $form): Form
     {
         return $form
