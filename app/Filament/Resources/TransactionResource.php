@@ -18,6 +18,8 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
+use Filament\Navigation\NavigationItem;
+
 class TransactionResource extends Resource
 {
     protected static ?string $model = Transaction::class;
