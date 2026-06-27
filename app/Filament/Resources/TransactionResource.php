@@ -310,6 +310,16 @@ class TransactionResource extends Resource
                     Tables\Columns\TextColumn::make('amount')
                         ->label('টাকার পরিমাণ')
                         ->money('BDT', divideBy: 1)
+                        ->formatStateUsing(function ($state, $record) {
+                            $amount = (float) $state;
+                            
+                            // 🔥 যদি খরচ (debit) এবং স্টক ট্রানজেকশন হয়, তবে লাইভ অতিরিক্ত খরচ যোগ করে মোট টাকা দেখাবে
+                            if ($record->type === 'debit' && $record->category && $record->category->is_stock && $record->stockItem) {
+                                $amount += (float) $record->stockItem->extra_cost;
+                            }
+                            
+                            return $amount;
+                        })
                         ->prefix(fn ($record) => $record->type === 'credit' ? '+ ৳' : '- ৳')
                         ->color(fn ($record) => $record->type === 'credit' ? 'success' : 'danger')
                         ->weight('bold')
