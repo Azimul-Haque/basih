@@ -9,8 +9,9 @@ class Category extends Model
 {
     protected $fillable = ['name', 'type', 'is_stock'];
 
+    // 🔥 TELLS ELOQUENT HOW TO LOOK UP ASSOCIATED ENTRIES
     public function transactions(): HasMany
     {
-        return $this->hasMany(Transaction::class);
+        return $this->hasMany(Transaction::class, 'category_id');
     }
 }
