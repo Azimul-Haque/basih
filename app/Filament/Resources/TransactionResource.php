@@ -64,12 +64,10 @@ class TransactionResource extends Resource
                             ->searchable()
                             ->preload()
                             ->required()
-                            ->reactive()
                             ->live()
-                            // 🔥 THE DEFINITIVE FIX: Inject the parent's type data straight into the modal action state
+                            // Intercepts modal initialization and binds parent type state cleanly
                             ->createOptionAction(function (Forms\Components\Actions\Action $action, Forms\Get $get) {
                                 return $action->mutateFormComponentUsing(function (Forms\Components\Component $component) use ($get) {
-                                    // Forcefully inherit the parent 'type' value right as the modal initializes
                                     $component->state(['type' => $get('type')]);
                                 });
                             })
@@ -78,7 +76,6 @@ class TransactionResource extends Resource
                                     ->label('নতুন খাতের নাম')
                                     ->required(),
                                     
-                                // This input handles the value safely inside the modal layout
                                 Forms\Components\Hidden::make('type')
                                     ->required(),
                             ])
@@ -101,7 +98,7 @@ class TransactionResource extends Resource
 
                 // 🔥 STOCKS SUB-FORM PANEL: Sliders open dynamically ONLY if the selected sector name contains "স্টক"
                 Forms\Components\Section::make('স্টক / ইনভেন্টরি বিবরণী')
-                    ->description('পণ্য ক্রয় বা বিক্রয়ের অতিরিক্ত তথ্য এখানে পূরণ করুন।')
+                    ->description('পণ্য ক্রয় বা বিক্রয়ের অতিরিক্ত তথ্য এখানে পূরণ করুন।')
                     ->visible(function (Forms\Get $get) {
                         $categoryId = $get('category_id');
                         if (!$categoryId) return false;
@@ -129,15 +126,8 @@ class TransactionResource extends Resource
                             ->required()
                             ->createOptionForm([
                                 Forms\Components\TextInput::make('name')
-                                    ->label('নতুন খাতের নাম')
+                                    ->label('নতুন পরিমাপের একক')
                                     ->required(),
-                                    
-                                // We look up the parent form state dynamically using a fallback function closure
-                                Forms\Components\Hidden::make('type')
-                                    ->default(function (Forms\Get $get) {
-                                        // This reliably grabs the active type selected in the main form frame
-                                        return $get('type'); 
-                                    }),
                             ])
                             ->createOptionUsing(fn (array $data) => Unit::create($data)->id)
                             ->columnSpan(['default' => 12, 'md' => 4]),
