@@ -64,14 +64,12 @@ class TransactionResource extends Resource
                             ->options(function (Forms\Get $get) {
                                 $selectedType = $get('type') ?? 'credit';
                                 
-                                // If Debit: Only show regular debit categories
                                 if ($selectedType === 'debit') {
                                     return Category::where('type', 'debit')
                                         ->pluck('name', 'id')
                                         ->toArray();
                                 }
 
-                                // If Credit: Merge standard credits AND debit stock-categories transformed into sales
                                 $standardCredits = Category::where('type', 'credit')->pluck('name', 'id')->toArray();
                                 $stockDebits = Category::where('type', 'debit')->where('is_stock', true)->get();
 
@@ -82,32 +80,36 @@ class TransactionResource extends Resource
 
                                 return $standardCredits + $salesOptions;
                             })
-                            ->createOptionForm([
-                                Forms\Components\TextInput::make('name')
-                                    ->label('নতুন খাতের নাম')
-                                    ->required()
-                                    ->unique(
-                                        table: 'categories',
-                                        column: 'name',
-                                        modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Forms\Components\TextInput $component) {
-                                            // 🔥 DIRECT LIVEWIRE STATE INTERACTION Bypassing Form Scoping Constraints
-                                            $livewireData = $component->getLivewire()->data;
-                                            $parentType = $livewireData['type'] ?? 'credit';
-                                            return $rule->where('type', $parentType);
-                                        }
-                                    ),
+                            // 🔥 FIXED: Returns null when Credit is selected, hiding the "+" button completely
+                            ->createOptionForm(function (Forms\Get $get) {
+                                if ($get('type') === 'credit') {
+                                    return null; 
+                                }
 
-                                Forms\Components\Toggle::make('is_stock')
-                                    ->label('এটি কি স্টকের খাত?')
-                                    ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের ধরণ ও একক এন্ট্রি করতে হবে।')
-                                    ->default(false)
-                                    ->visible(function (Forms\Components\Toggle $component) {
-                                        $livewireData = $component->getLivewire()->data;
-                                        return ($livewireData['type'] ?? 'credit') === 'debit';
-                                    }),
-                            ])
-                            // 🔥 Disable popup creation on Credit side to protect architecture flow
-                            ->disableCreateOptionButton(fn (Forms\Get $get) => $get('type') === 'credit')
+                                return [
+                                    Forms\Components\TextInput::make('name')
+                                        ->label('নতুন খাতের নাম')
+                                        ->required()
+                                        ->unique(
+                                            table: 'categories',
+                                            column: 'name',
+                                            modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Forms\Components\TextInput $component) {
+                                                $livewireData = $component->getLivewire()->data;
+                                                $parentType = $livewireData['type'] ?? 'credit';
+                                                return $rule->where('type', $parentType);
+                                            }
+                                        ),
+
+                                    Forms\Components\Toggle::make('is_stock')
+                                        ->label('এটি কি স্টকের খাত?')
+                                        ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের ধরণ ও একক এন্ট্রি করতে হবে।')
+                                        ->default(false)
+                                        ->visible(function (Forms\Components\Toggle $component) {
+                                            $livewireData = $component->getLivewire()->data;
+                                            return ($livewireData['type'] ?? 'credit') === 'debit';
+                                        }),
+                                ];
+                            })
                             ->createOptionUsing(function (array $data, Forms\Components\Select $component) {
                                 $livewireData = $component->getLivewire()->data;
                                 $parentType = $livewireData['type'] ?? 'credit';
@@ -227,7 +229,7 @@ class TransactionResource extends Resource
                     ])->columns(12)
             ]);
     }
-    
+
     public static function table(Table $table): Table
     {
         return $table
