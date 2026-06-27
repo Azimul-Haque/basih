@@ -74,6 +74,13 @@ class TransactionResource extends Resource
                                 Forms\Components\TextInput::make('name')
                                     ->label('নতুন খাতের নাম')
                                     ->required(),
+
+                                Forms\Components\Toggle::make('is_stock')
+                                    ->label('এটি কি স্টকের খাত?')
+                                    ->helperText('হ্যাঁ দিলে এই খাতে খরচ করার সময় পণ্যের ধরণ ও একক এন্ট্রি করতে হবে।')
+                                    ->default(false)
+                                    // Look up two levels out to check the parent form's 'type' field state
+                                    ->visible(fn (Forms\Get $get) => $get('../../type') === 'debit'),
                             ])
                             ->createOptionUsing(function (array $data, Forms\Get $get) {
                                 $category = Category::create([
