@@ -64,7 +64,7 @@ class AdminPanelProvider extends PanelProvider
     public function boot(): void
     {
         // 🔥 ডিফল্ট ড্যাশবোর্ডের নাম ও টাইটেল বাংলায় রূপান্তর
-        Pages\Dashboard::navigationLabel('ড্যাশবোর্ড');
-        Pages\Dashboard::title('ড্যাশবোর্ড');
+        Dashboard::navigationLabel('ড্যাশবোর্ড');
+        Dashboard::title('ড্যাশবোর্ড');
     }
 }
