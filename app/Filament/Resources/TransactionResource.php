@@ -480,20 +480,26 @@ class TransactionResource extends Resource
                 Tables\Filters\SelectFilter::make('category_id')
                     ->label('খাত অনুযায়ী ফিল্টার')
                     ->options(function () {
-                        // কারেন্ট ইউআরএল বা রুট থেকে ট্রানজেকশনের ধরন (type) ট্র্যাক করা
                         $currentUrl = request()->url();
                         
                         if (str_contains($currentUrl, 'credits')) {
-                            // জমা খাতার জন্য: শুধুমাত্র credit টাইপের ক্যাটাগরিগুলো দেখাবে
+                            // জমা খাতার জন্য: ১. ক্রেডিট টাইপ ক্যাটাগরি + ২. যে স্টক ক্যাটাগরিগুলোর ব্যালেন্স এখনও ০-এর চেয়ে বেশি
                             return \App\Models\Category::where('type', 'credit')
+                                ->orWhere(function ($query) {
+                                    $query->where('is_stock', true)
+                                        ->whereHas('stockItems', function ($q) {
+                                            // আপনার স্টক লজিক অনুযায়ী (উদা: বর্তমান কোয়ান্টিটি ০ এর বেশি আছে এমন)
+                                            $q->where('quantity', '>', 0); 
+                                        });
+                                })
                                 ->pluck('name', 'id');
                         } elseif (str_contains($currentUrl, 'debits')) {
-                            // খরচ খাতার জন্য: শুধুমাত্র debit টাইপের ক্যাটাগরিগুলো দেখাবে
+                            // খরচ খাতার জন্য: শুধুমাত্র debit টাইপের ক্যাটাগরিগুলো
                             return \App\Models\Category::where('type', 'debit')
                                 ->pluck('name', 'id');
                         }
 
-                        // গ্লোবাল ফলব্যাক (যদি কোনো কারণে টাইপ না পাওয়া যায়)
+                        // গ্লোবাল ফলব্যাক
                         return \App\Models\Category::pluck('name', 'id');
                     })
                     ->searchable()
