@@ -406,7 +406,7 @@ class TransactionResource extends Resource
                                 $type = $get('../../type') ?? $get('../type') ?? request()->input('components.0.snapshot.data.data.type') ?? 'credit';
                                 return $type === 'credit';
                             })
-                            ->columnSpan(12),
+                            ->columnSpan(['default' => 12, 'md' => 6]),
                     ])->columns(12)
             ]);
     }
