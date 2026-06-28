@@ -437,12 +437,12 @@ class TransactionResource extends Resource
                             ->size('md')
                             ->sortable()
                             ->formatStateUsing(function ($state, $record) {
-                                // যদি এটি একটি স্টক সেল হয় (আপনার মডেল অনুযায়ী চেক করুন)
                                 if (!$record || !$record->category || !$record->category->is_stock || !$record->stockItem) {
-                                    return null;
+                                    return $state; // কন্ডিশন না মিললে মূল নামই দেখাবে
                                 }
                                 
-                                return ' বিক্রয়';
+                                // কন্ডিশন মিললে নামের সাথে 'বিক্রয়' যোগ করে রিটার্ন করবে
+                                return $state . ' (বিক্রয়)';
                             }),
 
                         // যদি ক্যাটাগরি স্টকের হয়, তবেই মালের পরিমাণ ও একক লাইভ দেখাবে
