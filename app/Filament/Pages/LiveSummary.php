@@ -55,11 +55,14 @@ class LiveSummary extends Page
                   ->orWhere(function ($q) {
                       // এমন ডেবিট ক্যাটাগরি যা স্টক বিক্রির ট্রানজেকশন ধারণ করে
                       $q->where('type', 'debit')
-                            ->whereHas('stockItem', function ($s) {
+                        ->whereHas('transactions', function ($tr) {
+                            $tr->whereHas('stockItem', function ($s) {
                                 $s->where('is_stock', true)->where('type', 'sell');
                             });
+                        });
                   });
         })
+        ->whereHas('transactions') // নিশ্চিত করা যে ক্যাটাগরিতে ট্রানজেকশন আছে
         ->get()
         ->map(function ($category) {
             // ট্রানজেকশন এবং স্টক আইটেম লোড করা
