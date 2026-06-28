@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Pages\Auth;
+namespace App\Filament\Auth;
 
-use Filament\Pages\Auth\Login as BaseLogin;
+use Filament\Pages\Login as BaseLogin;
 use Filament\Forms\Form;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Checkbox;
