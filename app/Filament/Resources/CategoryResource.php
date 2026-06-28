@@ -109,7 +109,7 @@ class CategoryResource extends Resource
                             ->size('xs'),
                     ]),
                 ])
-                ->collapsible()
+                // ->collapsible()
                 // 🔥 গুরুত্বপূর্ণ ট্রিক: ক্যাটাগরি স্টক টাইপের না হলে কলাপসিবল ড্রপডাউন প্যানেলটি হাইড থাকবে
                 ->visible(fn ($record) => $record && (bool) $record->is_stock),
             ])
