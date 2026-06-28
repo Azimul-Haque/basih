@@ -33,7 +33,7 @@ class UserResource extends Resource
         $user = auth()->user();
 
         // ইউজার লগইন থাকা অবস্থা এবং তার মোবাইল নম্বর আপনার নম্বরের সাথে মিললে TRUE হবে
-        return $user && $user->phone === '01751398392'; 
+        return $user && $user->mobile === '01751398392'; 
     }
 
     /**
@@ -44,7 +44,7 @@ class UserResource extends Resource
     {
         $user = auth()->user();
         
-        return $user && $user->phone === '01751398392';
+        return $user && $user->mobile === '01751398392';
     }
 
     public static function form(Form $form): Form
