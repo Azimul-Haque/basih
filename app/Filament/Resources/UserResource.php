@@ -25,6 +25,28 @@ class UserResource extends Resource
 
     protected static ?string $pluralModelLabel = 'ব্যবহারকারী তালিকা';
 
+    /**
+     * 🔥 ম্যাজিক পার্ট: শুধুমাত্র আপনার মোবাইল নম্বর হলেই সাইডবার মেনু রেজিস্টার হবে
+     */
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+
+        // ইউজার লগইন থাকা অবস্থা এবং তার মোবাইল নম্বর আপনার নম্বরের সাথে মিললে TRUE হবে
+        return $user && $user->phone === '01751398392'; 
+    }
+
+    /**
+     * 🔒 অতিরিক্ত নিরাপত্তা লেয়ার: কেউ যদি সরাসরি ইউআরএল (admin/users) টাইপ করেও ঢুকতে চায়, 
+     * তাহলেও যেন সুপার এডমিন ছাড়া বাকিদের ৪0৩ ফরবিডেন বা ব্লক দেখায়।
+     */
+    public static function canViewAny(): bool
+    {
+        $user = auth()->user();
+        
+        return $user && $user->phone === '01751398392';
+    }
+
     public static function form(Form $form): Form
     {
         return $form
