@@ -362,6 +362,7 @@ class TransactionResource extends Resource
                                 // 🔥 আইডি বা টাইপ ক্র্যাশ প্রুফ গার্ড
                                 if ($type === 'debit' || !$categoryId) return [];
 
+                                // কুয়েরি অপ্টিমাইজড রাখা
                                 $totalPurchased = (float) \DB::table('transactions')
                                     ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
                                     ->where('transactions.category_id', $categoryId)
@@ -372,6 +373,7 @@ class TransactionResource extends Resource
                                     ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
                                     ->where('transactions.category_id', $categoryId)
                                     ->where('transactions.type', 'credit')
+                                    ->where('transactions.id', '!=', $record?->id) // বর্তমান ট্রানজেকশনটি বাদ দিন (গুরুত্বপূর্ণ!)
                                     ->sum('stock_items.quantity');
                                 
                                 $availableStock = $totalPurchased - $totalSold;
