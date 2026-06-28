@@ -382,7 +382,9 @@ class TransactionResource extends Resource
                                     $availableStock += (float) $record->stockItem->quantity;
                                 }
 
-                                return ['max:' . $availableStock];
+                                // 🔥 ফিক্স: max ভ্যালু যদি ০.৯৯ হয় এবং ইনপুট ১ হয়, তাও যাতে এরর না দেয়
+                                // আমরা সামান্য বাফার (0.0001) যোগ করছি ফ্লোটিং পয়েন্ট এরর এড়াতে
+                                return ['max:' . ($availableStock + 0.0001)];
                             })
                             ->validationMessages([
                                 'max' => 'গুদামে পর্যাপ্ত মাল নেই! আপনার সর্বোচ্চ বিক্রয়যোগ্য পরিমাণ: :max',
