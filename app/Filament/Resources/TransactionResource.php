@@ -305,7 +305,7 @@ class TransactionResource extends Resource
                         Forms\Components\Select::make('unit_id')
                             ->label('পরিমাপের একক')
                             ->options(\App\Models\Unit::pluck('name', 'id'))
-                            ->searchable()
+                            // ->searchable()
                             ->preload()
                             ->required()
                             ->visible(fn (Forms\Get $get) => ($get('../../type') ?? $get('../type') ?? 'credit') === 'debit')
