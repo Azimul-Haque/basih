@@ -212,6 +212,7 @@ class TransactionResource extends Resource
                             ->validationMessages([
                                 'max' => 'আপনার ক্যাশে পর্যাপ্ত টাকা নেই! বর্তমান সর্বোচ্চ ব্যবহার্য ব্যালেন্স: ৳:max',
                             ])
+                            ->extraInputAttributes(['inputmode' => 'decimal'])
                             ->columnSpan(['default' => 12, 'md' => 6]),
 
                         Forms\Components\TextInput::make('note')
