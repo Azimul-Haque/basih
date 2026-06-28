@@ -355,14 +355,14 @@ class TransactionResource extends Resource
                                 return null;
                             })
                             ->hintColor('warning')
-                            ->rules(function (Forms\Get $get, $record) {
-                                $type = $get('../../type') ?? $get('../type') ?? 'credit';
+                            ->maxValue(function (Forms\Get $get, $record) {
+                                $type = $get('../../type') ?? $get('../type');
                                 $categoryId = $get('../../category_id') ?? $get('../category_id');
 
-                                // 🔥 আইডি বা টাইপ ক্র্যাশ প্রুফ গার্ড
-                                if ($type === 'debit' || !$categoryId) return [];
+                                // যদি ডেবিট হয় বা ক্যাটাগরি না থাকে, কোনো লিমিট নাই
+                                if ($type === 'debit' || !$categoryId) return 99999999; 
 
-                                // কুয়েরি অপ্টিমাইজড রাখা
+                                // কুয়েরি: টোটাল পারচেজ - টোটাল সোল্ড
                                 $totalPurchased = (float) \DB::table('transactions')
                                     ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
                                     ->where('transactions.category_id', $categoryId)
@@ -373,17 +373,47 @@ class TransactionResource extends Resource
                                     ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
                                     ->where('transactions.category_id', $categoryId)
                                     ->where('transactions.type', 'credit')
-                                    ->where('transactions.id', '!=', $record?->id) // বর্তমান ট্রানজেকশনটি বাদ দিন (গুরুত্বপূর্ণ!)
+                                    ->where('transactions.id', '!=', $record?->id ?? 0) // বর্তমান ট্রানজেকশন বাদ
                                     ->sum('stock_items.quantity');
                                 
                                 $availableStock = $totalPurchased - $totalSold;
 
+                                // আপডেট মোড হলে বর্তমান রেকর্ড যোগ করা
                                 if ($record && $record->stockItem) {
                                     $availableStock += (float) $record->stockItem->quantity;
                                 }
 
-                                return ['max:' . $availableStock];
+                                return $availableStock; // ফিলামেন্ট নিজে থেকেই এটা দিয়ে ভ্যালিডেশন করবে
                             })
+                            // ->rules(function (Forms\Get $get, $record) {
+                            //     $type = $get('../../type') ?? $get('../type') ?? 'credit';
+                            //     $categoryId = $get('../../category_id') ?? $get('../category_id');
+
+                            //     // 🔥 আইডি বা টাইপ ক্র্যাশ প্রুফ গার্ড
+                            //     if ($type === 'debit' || !$categoryId) return [];
+
+                            //     // কুয়েরি অপ্টিমাইজড রাখা
+                            //     $totalPurchased = (float) \DB::table('transactions')
+                            //         ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
+                            //         ->where('transactions.category_id', $categoryId)
+                            //         ->where('transactions.type', 'debit')
+                            //         ->sum('stock_items.quantity');
+
+                            //     $totalSold = (float) \DB::table('transactions')
+                            //         ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
+                            //         ->where('transactions.category_id', $categoryId)
+                            //         ->where('transactions.type', 'credit')
+                            //         ->where('transactions.id', '!=', $record?->id) // বর্তমান ট্রানজেকশনটি বাদ দিন (গুরুত্বপূর্ণ!)
+                            //         ->sum('stock_items.quantity');
+                                
+                            //     $availableStock = $totalPurchased - $totalSold;
+
+                            //     if ($record && $record->stockItem) {
+                            //         $availableStock += (float) $record->stockItem->quantity;
+                            //     }
+
+                            //     return ['max:' . $availableStock];
+                            // })
                             ->validationMessages([
                                 'max' => 'গুদামে পর্যাপ্ত মাল নেই! আপনার সর্বোচ্চ বিক্রয়যোগ্য পরিমাণ: :max',
                             ])
