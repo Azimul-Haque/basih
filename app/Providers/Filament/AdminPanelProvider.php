@@ -57,7 +57,6 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
-            ->notificationsPosition('bottom-center')
             ->authMiddleware([
                 Authenticate::class,
             ]);
@@ -143,5 +142,9 @@ class AdminPanelProvider extends PanelProvider
                 ');
             },
         );
+
+        // 🔥 ফিলামেন্ট v3 অফিশিয়াল গ্লোবাল নোটিফিকেশন পজিশন ফিক্স
+        Notifications::alignment(\Filament\Support\Enums\Alignment::Center);
+        Notifications::verticalAlignment(\Filament\Support\Enums\VerticalAlignment::Bottom);
     }
 }
