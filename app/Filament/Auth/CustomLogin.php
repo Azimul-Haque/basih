@@ -1,22 +1,20 @@
 <?php
 
-namespace App\Filament\Auth;
+namespace App\Filament\Auth; // 👈 আপনার ফোল্ডার অনুযায়ী একদম সঠিক নেমস্পেস
 
-use Filament\Pages\Login as BaseLogin;
-use Filament\Forms\Form;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Checkbox;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Form;
+use Filament\Pages\Auth\Login as BaseLogin; // 👈 এটি ফিলামেন্ট ভেন্ডরের কোর লগইন ক্লাস
 
 class CustomLogin extends BaseLogin
 {
-    // ১. লগইন পেজের মূল শিরোনাম
     public function getHeading(): string
     {
         return 'হিসাব সিস্টেমে প্রবেশ করুন';
     }
 
-    // ২. ইনপুট ফিল্ডগুলোর বাংলা লেবেল ও প্লেসহোল্ডার
     public function form(Form $form): Form
     {
         return $form
@@ -35,7 +33,6 @@ class CustomLogin extends BaseLogin
             ->statePath('data');
     }
 
-    // ৩. সাবমিট বাটনের বাংলা টেক্সট
     protected function getAuthenticateFormAction(): Action
     {
         return Action::make('authenticate')
