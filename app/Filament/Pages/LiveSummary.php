@@ -97,8 +97,6 @@ class LiveSummary extends Page
         // মোট অবিক্রীত মালের রিয়েল-টাইম বাজার মূল্য
         $totalStockValue = $stockReports->sum('asset_value');
 
-        // মোট অবিক্রীত মালের আনুমানিক মূল্য এবং ট্রানজেকশন সামারি
-        $totalStockValue = $stockReports->sum('asset_value');
         $grandTotalCredit = $categoryCredits->sum('total_amount');
         $grandTotalDebit = $categoryDebits->sum('total_amount');
 
