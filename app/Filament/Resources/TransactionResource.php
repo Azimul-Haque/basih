@@ -169,6 +169,7 @@ class TransactionResource extends Resource
                         Forms\Components\TextInput::make('amount')
                             ->label('মোট টাকার অংক')
                             ->numeric()
+                            ->step(0.01)
                             ->prefix('৳')
                             ->required()
                             ->hint(function (Forms\Get $get, $record) {
