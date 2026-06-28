@@ -34,24 +34,6 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
-            ->extraStyles([
-                '
-                /* সাইডবার মেনু টেক্সট বড় করা */
-                .fi-sidebar-item-label {
-                    font-size: 1.15rem !important; /* ডিফল্ট থেকে প্রায় ২০% বড় */
-                    font-weight: 700 !important;
-                }
-                /* ড্যাশবোর্ডের মূল হেডিং ও জেনারেল টেক্সট অপ্টিমাইজেশন */
-                .fi-header-heading {
-                    font-size: 1.75rem !important;
-                    font-weight: 900 !important;
-                }
-                /* টেবিল বা কাস্টম উইজেটের ভেতরকার সাধারণ টেক্সট */
-                .fi-ta-text {
-                    font-size: 1rem !important;
-                }
-                '
-            ])
             ->sidebarCollapsibleOnDesktop()
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
@@ -79,5 +61,37 @@ class AdminPanelProvider extends PanelProvider
             ]);
     }
 
-    // 💡 ক্র্যাশ করা boot() মেথডটি পুরোপুরি পরিষ্কার করে দেওয়া হলো, এর আর কোনো প্রয়োজন নেই।
+    public function boot(): void
+    {
+        // 🔥 গ্লোবাল রেন্ডার হুক ব্যবহার করে হেড ট্যাগে কাস্টম সিএসএস ইনজেক্ট করা হলো
+        FilamentView::registerRenderHook(
+            'panels::head.end',
+            fn (): string => new HtmlString('
+                <style>
+                    /* সাইডবার বা মেনুর টেক্সট বড় করা */
+                    .fi-sidebar-item-label {
+                        font-size: 1.1rem !important; /* ডিফল্ট থেকে বড় */
+                        font-weight: 600 !important;
+                    }
+                    
+                    /* সাইডবার আইকনগুলোর সাইজ সামান্য বড় করা */
+                    .fi-sidebar-item-icon {
+                        width: 1.5rem !important;
+                        height: 1.5rem !important;
+                    }
+
+                    /* ড্যাশবোর্ডের মেইন হেডিং বড় করা */
+                    .fi-header-heading {
+                        font-size: 1.65rem !important;
+                        font-weight: 800 !important;
+                    }
+
+                    /* টেবিল বা কার্ডের ভেতরের সাধারণ টেক্সট রিডাবিলিটি বাড়ানো */
+                    .fi-ta-text, .fi-wi-stats-overview-stat {
+                        font-size: 0.95rem !important;
+                    }
+                </style>
+            '),
+        );
+    }
 }
