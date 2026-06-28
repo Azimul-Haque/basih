@@ -108,27 +108,59 @@ class AdminPanelProvider extends PanelProvider
                     }
 
                     /* 🔥 ফিলামেন্ট v3-এর জন্য ওয়ান-হ্যান্ডেড মোবাইল ফ্রেন্ডলি টোস্ট ফিক্স */
+                    /* 🔥 ওয়ান-হ্যান্ডেড মোবাইল ফ্রেন্ডলি হাই-ভিজিবিলিটি টোস্ট ফিক্স */
                     @media (max-width: 1023px) {
-                        /* ফিলামেন্টের নোটিফিকেশন র‍্যাপার কন্টেইনারকে স্ক্রিনের নিচে পুশ করা */
                         div[id^="notification-"], 
                         .fi-no-notification-container,
                         div.fixed.inset-4.z-50 {
                             top: auto !important;
-                            bottom: env(safe-area-inset-bottom, 24px) !important;
+                            bottom: env(safe-area-inset-bottom, 30px) !important; /* নিচ থেকে পারফেক্ট গ্যাপ */
                             left: 50% !important;
                             right: auto !important;
                             transform: translateX(-50%) !important;
                             display: flex !important;
-                            flex-direction: column-reverse !important; /* নতুন মেসেজ নিচে আসবে */
-                            width: 90% !important;
+                            flex-direction: column-reverse !important;
+                            width: 92% !important;
                             max-width: 360px !important;
                         }
                         
-                        /* ভেতরের প্রতিটি টোস্টের মার্জিন ও অ্যানিমেশন অপ্টিমাইজেশন */
+                        /* ✨ টোস্টের মূল বক্সকে আকর্ষণীয় ও স্পষ্ট করার স্টাইল */
                         .fi-no-notification {
-                            margin-top: 8px !important;
+                            margin-top: 10px !important;
                             margin-bottom: 0 !important;
-                            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+                            
+                            /* ১. প্রিমিয়াম গ্লাস-মরফিজম ও ব্যাকগ্রাউন্ড ব্লার ইফেক্ট */
+                            background: rgba(255, 255, 255, 0.92) !important;
+                            backdrop-filter: blur(8px) !important;
+                            -webkit-backdrop-filter: blur(8px) !important;
+                            
+                            /* ২. থ্রি-ডি ডাইনামিক ডিপ শ্যাডো (Deep Drop Shadow) */
+                            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 
+                                        0 10px 10px -5px rgba(0, 0, 0, 0.1),
+                                        0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+                            
+                            /* ৩. বর্ডার রেডিয়াস এবং স্পষ্ট বর্ডার লাইন */
+                            border-radius: 16px !important;
+                            border: 1.5px solid rgba(226, 232, 240, 0.8) !important;
+                            padding: 14px !important;
+                            transition: all 0.3s ease !important;
+                        }
+
+                        /* 🌙 ডার্ক মোডের জন্য ভিজিবিলিটি অপ্টিমাইজেশন */
+                        .dark .fi-no-notification {
+                            background: rgba(30, 41, 59, 0.95) !important;
+                            border-color: rgba(71, 85, 105, 0.5) !important;
+                            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+                        }
+
+                        /* 🟢 সফল (Success) নোটিফিকেশনের বাম পাশে গাঢ় সবুজ হাইলাইট লাইন */
+                        .fi-no-notification[class*="success"] {
+                            border-left: 5px solid #10b981 !important;
+                        }
+
+                        /* 🔴 এরর বা ডিলিট (Danger) নোটিফিকেশনের বাম পাশে গাঢ় লাল হাইলাইট লাইন */
+                        .fi-no-notification[class*="danger"] {
+                            border-left: 5px solid #ef4444 !important;
                         }
                     }
                 </style>
