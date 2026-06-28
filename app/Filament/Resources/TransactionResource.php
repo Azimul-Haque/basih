@@ -417,8 +417,6 @@ class TransactionResource extends Resource
                             ->validationMessages([
                                 'max' => 'গুদামে পর্যাপ্ত মাল নেই! আপনার সর্বোচ্চ বিক্রয়যোগ্য পরিমাণ: :max',
                             ])
-                            ->dehydrated() // ফিলামেন্ট যেন এই ফিল্ডটিকে ডাটাবেজে পাঠানোর আগে নিশ্চিত করে
-                            ->live(onBlur: true) // ইনপুট দেওয়ার পর ভ্যালিডেশন চেক করবে
                             ->columnSpan(['default' => 12, 'md' => 6]),
 
                         // ৩. অতিরিক্ত খরচ (পরিবহন/লেবার) -> শুধুমাত্র Debit মোডে দেখাবে, Credit মোডে পুরোপুরি লুকানো থাকবে
