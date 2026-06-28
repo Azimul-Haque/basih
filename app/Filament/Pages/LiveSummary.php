@@ -21,23 +21,72 @@ class LiveSummary extends Page
      */
     protected function getViewData(): array
     {
-        // ১. সমস্ত আয়ের খাতসমূহের টোটাল সামারি (সবগুলো কলামের যোগফল সহ)
-        $categoryCredits = DB::table('transactions')
-            ->join('categories', 'transactions.category_id', '=', 'categories.id')
-            ->where('transactions.type', 'credit')
-            ->select('categories.name', DB::raw('SUM(transactions.amount) as total_amount'))
-            ->groupBy('categories.id', 'categories.name')
-            ->orderByDesc('total_amount')
-            ->get(); // 👈 এবার সব ক্যাটাগরি নেওয়া হলো (সীমাবদ্ধতা ছাড়া)
+        // ১. সমস্ত আয়ের খাতসমূহের টোটাল সামারি + ট্রানজেকশন ডিটেইলস
+        $categoryCredits = \App\Models\Category::where('type', 'credit')
+            ->whereHas('transactions')
+            ->get()
+            ->map(function ($category) {
+                // এই খাতের সমস্ত ট্রানজেকশন হিস্ট্রি (তারিখ ও অ্যামাউন্ট)
+                $details = \App\Models\Transaction::where('category_id', $category->id)
+                    ->orderByDesc('date')
+                    ->orderByDesc('id')
+                    ->get(['date', 'amount'])
+                    ->map(function ($t) {
+                        // তারিখ বাংলায় রূপান্তর
+                        $dateStr = \Carbon\Carbon::parse($t->date)->format('d M, Y');
+                        $en = ['0','1','2','3','4','5','6','7','8','9','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                        $bn = ['০','১','২','৩','৪','৫','৬','৭','৮','৯','জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+                        $t->bangla_date = str_replace($en, $bn, $dateStr);
+                        return $t;
+                    });
 
-        // ২. সমস্ত খরচের খাতসমূহের টোটাল সামারি
-        $categoryDebits = DB::table('transactions')
-            ->join('categories', 'transactions.category_id', '=', 'categories.id')
-            ->where('transactions.type', 'debit')
-            ->select('categories.name', DB::raw('SUM(transactions.amount) as total_amount'))
-            ->groupBy('categories.id', 'categories.name')
-            ->orderByDesc('total_amount')
-            ->get();
+                return [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'total_amount' => $details->sum('amount'),
+                    'details' => $details,
+                ];
+            })
+            ->sortByDesc('total_amount');
+
+        // ২. সমস্ত খরচের খাতসমূহের টোটাল সামারি + ট্রানজেকশন ডিটেইলস
+        $categoryDebits = \App\Models\Category::where('type', 'debit')
+            ->whereHas('transactions')
+            ->get()
+            ->map(function ($category) {
+                // এই খাতের সমস্ত ট্রানজেকশন হিস্ট্রি
+                $details = \App\Models\Transaction::where('category_id', $category->id)
+                    ->orderByDesc('date')
+                    ->orderByDesc('id')
+                    ->get()
+                    ->map(function ($t) {
+                        // স্টক আইটেমের এক্সট্রা কস্ট থাকলে তা খরচে যোগ হবে
+                        $amount = (float) $t->amount;
+                        if ($t->category && $t->category->is_stock && $t->stockItem) {
+                            $amount += (float) $t->stockItem->extra_cost;
+                        }
+                        $t->final_amount = $amount;
+
+                        // তারিখ বাংলায় রূপান্তর
+                        $dateStr = \Carbon\Carbon::parse($t->date)->format('d M, Y');
+                        $en = ['0','1','2','3','4','5','6','7','8','9','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                        $bn = ['০','১','২','৩','৪','৫','৬','৭','৮','৯','জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+                        $t->bangla_date = str_replace($en, $bn, $dateStr);
+                        return $t;
+                    });
+
+                return [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'total_amount' => $details->sum('final_amount'),
+                    'details' => $details,
+                ];
+            })
+            ->sortByDesc('total_amount');
+
+        // গ্র্যান্ড টোটাল ক্যালকুলেশন
+        $grandTotalCredit = $categoryCredits->sum('total_amount');
+        $grandTotalDebit = $categoryDebits->sum('total_amount');
 
         // ৩. স্টক রিপোর্ট এবং রিয়েল-টাইম ভ্যালুয়েশন (Current Stock Scenario: ইন - আউট)
         $stockReports = DB::table('categories')
