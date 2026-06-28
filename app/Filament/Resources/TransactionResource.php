@@ -28,6 +28,7 @@ class TransactionResource extends Resource
     protected static ?int $navigationSort = 2;
     protected static ?string $modelLabel = 'লেনদেন';
     protected static ?string $pluralModelLabel = 'লেনদেন খাতা';
+    protected static bool $hasInfolist = true;
 
     // 🔥 সাইডবারে প্যারেন্ট হিসেবে বা চাইল্ড ট্র্যাকিং সচল রাখতে এটি নিশ্চিত করুন
     protected static bool $shouldRegisterNavigation = true; 
@@ -532,7 +533,7 @@ class TransactionResource extends Resource
 
                 // 🔥 নতুন অ্যাকশন: ক্লিক করলে শুধু ডাটা বা বিবরণীটি পপআপ/মোডালে দেখাবে
                 Tables\Actions\ViewAction::make()->iconButton(),
-                            
+
                 Tables\Actions\EditAction::make()->iconButton(),
                 Tables\Actions\DeleteAction::make()->iconButton(),
             ]);
