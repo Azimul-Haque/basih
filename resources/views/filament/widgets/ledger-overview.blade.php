@@ -4,7 +4,7 @@
             <a href="{{ url('admin/transactions/credits') }}" class="block p-4 transition duration-200 rounded-xl shadow-sm border-l-4 border-emerald-500 hover:scale-[1.02] dark:bg-gray-800" style="background-color: rgba(16, 185, 129, 0.08);">
                 <div class="flex items-center justify-between">
                     <span class="text-base font-black text-emerald-600 dark:text-emerald-400">➡️ জমা খাতা</span>
-                    <x-heroicon-m-arrow-up-right class="w-5 h-5 text-emerald-500" />
+                    <x-heroicon-o-arrow-up-right class="w-5 h-5 text-emerald-500" />
                 </div>
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 hidden sm:block">সকল জমার বিবরণী দেখুন</p>
             </a>
