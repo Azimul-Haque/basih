@@ -442,7 +442,7 @@ class TransactionResource extends Resource
                                 }
                                 
                                 // কন্ডিশন মিললে নামের সাথে 'বিক্রয়' যোগ করে রিটার্ন করবে
-                                if ($record->type === 'debit') {
+                                if ($record->type === 'credit') {
                                     return $state . ' (বিক্রয়)';
                                 } else {
                                     return $state . ' (ক্রয়)';
