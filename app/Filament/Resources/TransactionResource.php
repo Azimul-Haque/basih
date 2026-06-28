@@ -488,7 +488,7 @@ class TransactionResource extends Resource
                             ->size('sm'),
                     ]),
                 ])
-                ->collapsible()
+                // ->collapsible()
                 ->visible(fn ($record) => $record && !empty($record->note)),
             ])
             ->filters([
