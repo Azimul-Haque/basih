@@ -3,6 +3,18 @@
 return [
 
     /*
+        |--------------------------------------------------------------------------
+        | Favicon
+        |--------------------------------------------------------------------------
+        |
+        | This is the path to the favicon used for pages in the panel. It should
+        | be relative to the `public` directory of your Laravel application.
+        |
+        */
+
+    'favicon' => 'images/favicon.png', // 👈 আপনার ফাইলের নাম বা পাথ (যেমন: 'images/favicon.png')
+
+    /*
     |--------------------------------------------------------------------------
     | Broadcasting
     |--------------------------------------------------------------------------
