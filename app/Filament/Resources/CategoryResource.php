@@ -105,7 +105,6 @@ class CategoryResource extends Resource
                     ]),
                 ])
                 ->collapsible()
-                ->visible(fn ($record) => $record && !empty($record->note)),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
