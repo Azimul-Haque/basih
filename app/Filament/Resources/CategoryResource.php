@@ -103,7 +103,7 @@ class CategoryResource extends Resource
                 Tables\Columns\Layout\Panel::make([
                     Tables\Columns\Layout\Stack::make([
                         Tables\Columns\TextColumn::make('is_stock')
-                            ->formatStateUsing(fn ($state) => $state ? '📦 স্টক ধরণ' : '')
+                            ->formatStateUsing(fn ($state) => $state ? '📦 ধরণ: স্টক' : '')
                             ->color('warning')
                             ->weight('bold')
                             ->size('xs'),
