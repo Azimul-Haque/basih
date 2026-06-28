@@ -28,7 +28,7 @@ class CustomLogin extends BaseLogin
 
                 $this->getPasswordFormComponent()
                     ->label('পিন নম্বর')
-                    ->placeholder('••••'),
+                    ->placeholder('••••••••'),
 
                 $this->getRememberFormComponent()
                     ->label('লগইন তথ্য মনে রাখুন'),
