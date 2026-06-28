@@ -81,43 +81,59 @@ class CategoryResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\Layout\Split::make([
+                    // বাম পাশের ব্লক: খাতের নাম
                     Tables\Columns\TextColumn::make('name')
                         ->label('খাতের নাম')
                         ->weight('bold')
                         ->searchable()
-                        ->size('md'),
+                        ->size('md')
+                        ->sortable(), // 🔥 খাতের নাম অনুযায়ী সর্ট করার সুবিধা
                         
+                    // ডান পাশের ব্লক: ক্রেডিট/ডেবিট অনুযায়ী কালারফুল ব্যাজ
                     Tables\Columns\TextColumn::make('type')
                         ->label('ধরণ')
                         ->badge()
                         ->formatStateUsing(fn (string $state): string => $state === 'credit' ? 'জমা (Credit)' : 'খরচ (Debit)')
                         ->color(fn (string $state): string => $state === 'credit' ? 'success' : 'danger')
-                        ->alignEnd(),
+                        ->alignEnd()
+                        ->sortable(), // 🔥 ধরণ অনুযায়ী সর্ট করার সুবিধা
                 ]),
                 
-                // Displays a subtle sub-badge if the sector is flagged for inventory operations
+                // 📦 ডাইনামিক কলাপসিবল প্যানেল: শুধুমাত্র স্টক ফ্ল্যাগ ট্র্যাকিং সচল থাকলেই প্যানেল বাটনটি আসবে
                 Tables\Columns\Layout\Panel::make([
                     Tables\Columns\Layout\Stack::make([
                         Tables\Columns\TextColumn::make('is_stock')
                             ->formatStateUsing(fn ($state) => $state ? '📦 স্টক ট্র্যাকিং সচল' : '')
                             ->color('warning')
-                            ->size('sm'),
+                            ->weight('bold')
+                            ->size('xs'),
                     ]),
                 ])
                 ->collapsible()
+                // 🔥 গুরুত্বপূর্ণ ট্রিক: ক্যাটাগরি স্টক টাইপের না হলে কলাপসিবল ড্রপডাউন প্যানেলটি হাইড থাকবে
+                ->visible(fn ($record) => $record && (bool) $record->is_stock),
             ])
             ->filters([
+                // 🔥 ধরণ ফিল্টার (মোবাইল কিবোর্ড সেফ)
                 Tables\Filters\SelectFilter::make('type')
-                    ->label('ধরণ অনুযায়ী খুঁজুন')
+                    ->label('ধরণ অনুযায়ী খুঁজুন')
                     ->options([
                         'credit' => 'জমা (Credit)',
                         'debit' => 'খরচ (Debit)',
-                    ]),
+                    ])
+                    ->searchable(false) // ❌ মোবাইলে কিবোর্ড অটো-ওপেন হওয়া বন্ধ করা হলো
+                    ->preload(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make()->iconButton(),
+                Tables\Actions\ViewAction::make()->iconButton(), // ভিউ মোডাল বাটন
+                Tables\Actions\EditAction::make()->iconButton()->slideOver(), // মোবাইল ফ্রেন্ডলি স্লাইড ড্রয়ার এডিট
                 Tables\Actions\DeleteAction::make()->iconButton(),
-            ]);
+            ])
+            // ❌ পুরো টেবিল রোর ডিফল্ট এডিট লিংক ডিজেবল করা হলো
+            ->recordUrl(null)
+            
+            // 🔥 লাইনের যেকোনো জায়গায় টাচ/ক্লিক করলে সরাসরি ভিউ মোডাল ওপেন হবে
+            ->recordAction(Tables\Actions\ViewAction::class);
     }
 
     public static function getRelations(): array
