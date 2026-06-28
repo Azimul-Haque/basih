@@ -415,18 +415,18 @@ class TransactionResource extends Resource
                             ->label('তারিখ')
                             ->color('gray')
                             ->size('sm')
-                            ->sortable(), // 🔥 তারিখ অনুযায়ী টেবিল সর্ট করার সুবিধা
+                            ->sortable(),
 
                         Tables\Columns\TextColumn::make('category.name')
                             ->label('খাত')
                             ->weight('bold')
                             ->searchable()
                             ->size('md')
-                            ->sortable(), // 🔥 খাত/ক্যাটাগরি অনুযায়ী টেবিল সর্ট করার সুবিধা
+                            ->sortable(),
 
                         // যদি ক্যাটাগরি স্টকের হয়, তবেই মালের পরিমাণ ও একক লাইভ দেখাবে
                         Tables\Columns\TextColumn::make('stockItem.quantity')
-                            ->label('স্টک বিবরণী')
+                            ->label('স্টক বিবরণী')
                             ->formatStateUsing(function ($state, $record) {
                                 if (!$record || !$record->category || !$record->category->is_stock || !$record->stockItem) {
                                     return null;
@@ -465,10 +465,8 @@ class TransactionResource extends Resource
                         ->color(fn ($record) => $record->type === 'credit' ? 'success' : 'danger')
                         ->weight('bold')
                         ->alignEnd()
-                        ->sortable(), // 🔥 টাকার অংক অনুযায়ী সর্ট করার সুবিধা
-                ])
-                // 🔥 ফিলামেন্ট v3 কাস্টম লেআউটে লাইনের যেকোনো জায়গায় ক্লিক করলে ভিউ মোডাল ট্রিপ করার অফিশিয়াল মেথড
-                ->action(Tables\Actions\ViewAction::class), 
+                        ->sortable(),
+                ]), // Split ক্লোজ হলো
                 
                 // ডাইনামিক কলাপসিবল প্যানেল: মন্তব্য থাকলেই কেবল ড্রপডাউন অ্যারো বাটন ও প্যানেল আসবে
                 Tables\Columns\Layout\Panel::make([
@@ -483,7 +481,7 @@ class TransactionResource extends Resource
                 ->visible(fn ($record) => $record && !empty($record->note)),
             ])
             ->filters([
-                // 🔥 ফিল্টার ১: খাত/ক্যাটাগরি ফিল্টার ড্রপডাউন (মোবাইল অপ্টিমাইজড)
+                // 🔥 ফিল্টার ১: খাত/ক্যাটাগরি ফিল্টার ড্রপডাউন (মোবাইল কিবোর্ড সেফ)
                 Tables\Filters\SelectFilter::make('category_id')
                     ->label('খাত অনুযায়ী ফিল্টার')
                     ->options(function () {
@@ -509,10 +507,10 @@ class TransactionResource extends Resource
 
                         return \App\Models\Category::pluck('name', 'id');
                     })
-                    ->searchable(false) // 🔥 মোবাইল কিবোর্ড অটো ওপেন হওয়া চিরতরে বন্ধ করা হলো
-                    ->preload(),       // অপশনগুলো আগে থেকেই রেন্ডার হয়ে ড্রপডাউনে সুন্দরভাবে থাকবে
+                    ->searchable(false) // ❌ কিবোর্ড ওপেন হওয়া বন্ধ করা হলো
+                    ->preload(),       // অপশন প্রিলোড হবে
 
-                // 🔥 ফিল্টার ২: ডেট রেঞ্চ ফিল্টার (মাসিক বা নির্দিষ্ট মেয়াদের হিসাব)
+                // 🔥 ফিল্টার ২: ডেট রেঞ্চ ফিল্টার
                 Tables\Filters\Filter::make('date')
                     ->form([
                         \Filament\Forms\Components\DatePicker::make('from')->label('শুরুর তারিখ'),
@@ -531,11 +529,14 @@ class TransactionResource extends Resource
             )
             ->actions([
                 Tables\Actions\ViewAction::make()->iconButton(),
-                Tables\Actions\EditAction::make()->iconButton()->slideOver(), // মোবাইল এডিটের সুবিধার্থে স্লাইড ড্রয়ার লক করা হলো
+                Tables\Actions\EditAction::make()->iconButton()->slideOver(),
                 Tables\Actions\DeleteAction::make()->iconButton(),
             ])
-            // ❌ পুরো টেবিল রো ট্র্যাকিং ডিফল্ট এডিট ইউআরএল ফ্লাশ করা হলো
-            ->recordUrl(null); 
+            // ❌ গ্লোবাল ডাইরেক্ট ইউআরএল রিডাইরেকশন নাল করা হলো
+            ->recordUrl(null)
+            
+            // 🔥 ফিলামেন্ট v3 নেটিভ ফিক্স: পুরো লাইনের যেকোনো জায়গায় ক্লিক করলে ভিউ অ্যাকশন সচল হবে
+            ->recordAction(Tables\Actions\ViewAction::class); 
     }
 
     public static function getRelations(): array
