@@ -529,6 +529,10 @@ class TransactionResource extends Resource
                     ->label('ফিল্টার ও অনুসন্ধান') // ফিল্টার ট্রিগার বাটনটি দেখতে প্রফেশনাল লাগবে
             )
             ->actions([
+
+                // 🔥 নতুন অ্যাকশন: ক্লিক করলে শুধু ডাটা বা বিবরণীটি পপআপ/মোডালে দেখাবে
+                Tables\Actions\ViewAction::make()->iconButton(),
+                            
                 Tables\Actions\EditAction::make()->iconButton(),
                 Tables\Actions\DeleteAction::make()->iconButton(),
             ]);
