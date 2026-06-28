@@ -109,5 +109,37 @@ class AdminPanelProvider extends PanelProvider
                 </style>
             '),
         );
+
+        // 🔥 ১. ফন্ট ও সিএসএস রেজিস্টার হুক (আপনার আগের কোডটি এখানে থাকবে)
+        FilamentView::registerRenderHook(
+            'panels::head.end',
+            fn (): string => new HtmlString('
+                '),
+        );
+
+        // 🔥 ২. নতুন হুক: টপবারের বাম পাশে ডাইনামিক ব্যাক বাটন ইনজেকশন
+        FilamentView::registerRenderHook(
+            'panels::topbar.start',
+            function (): string {
+                // যদি ব্যবহারকারী একদম মেইন ড্যাশবোর্ডে থাকেন, তবে ব্যাক বাটন দেখানোর প্রয়োজন নেই
+                $isDashboard = request()->routeIs('filament.admin.pages.dashboard');
+                if ($isDashboard) {
+                    return '';
+                }
+
+                return new HtmlString('
+                    <button 
+                        onclick="window.history.length > 1 ? window.history.back() : window.location.href=\'/admin\'" 
+                        class="flex items-center justify-center p-2 mr-2 text-gray-500 transition duration-200 rounded-lg hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 focus:outline-none"
+                        title="পেছনে যান"
+                        style="-webkit-tap-highlight-color: transparent;"
+                    >
+                        <svg class="w-6 h-6 stroke-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                        </svg>
+                    </button>
+                ');
+            },
+        );
     }
 }
