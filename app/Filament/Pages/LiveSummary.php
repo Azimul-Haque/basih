@@ -51,59 +51,59 @@ class LiveSummary extends Page
 
         // ১. সমস্ত আয়ের খাতসমূহ (Credit) + নির্দিষ্ট শর্তযুক্ত স্টক বিক্রির খাত (Debit)
         $categoryCredits = \App\Models\Category::where(function ($query) {
-                $query->where('type', 'credit')
-                      ->orWhere(function ($q) {
-                          // এমন ডেবিট ক্যাটাগরি যা স্টক বিক্রির ট্রানজেকশন ধারণ করে
-                          $q->where('type', 'debit')
-                            ->whereHas('transactions', function ($tr) {
-                                $tr->whereHas('stockItem', function ($s) {
-                                    $s->where('is_stock', true)->where('type', 'sell');
-                                });
+            $query->where('type', 'credit')
+                  ->orWhere(function ($q) {
+                      // এমন ডেবিট ক্যাটাগরি যা স্টক বিক্রির ট্রানজেকশন ধারণ করে
+                      $q->where('type', 'debit')
+                        ->whereHas('transactions', function ($tr) {
+                            $tr->whereHas('stockItem', function ($s) {
+                                $s->where('is_stock', true)->where('type', 'sell');
                             });
-                      });
-            })
-            ->whereHas('transactions') // নিশ্চিত করা যে ক্যাটাগরিতে ট্রানজেকশন আছে
-            ->get()
-            ->map(function ($category) {
-                // ট্রানজেকশন এবং স্টক আইটেম লোড করা
-                $details = \App\Models\Transaction::with('stockItem')
-                    ->where('category_id', $category->id)
-                    ->orderByDesc('date')
-                    ->get(['id', 'date', 'amount', 'stock_item_id']);
+                        });
+                  });
+        })
+        ->whereHas('transactions') // নিশ্চিত করা যে ক্যাটাগরিতে ট্রানজেকশন আছে
+        ->get()
+        ->map(function ($category) {
+            // ট্রানজেকশন এবং স্টক আইটেম লোড করা
+            $details = \App\Models\Transaction::with('stockItem')
+                ->where('category_id', $category->id)
+                ->orderByDesc('date')
+                ->get(['id', 'date', 'amount', 'stock_item_id']);
 
-                // স্টক সেল হিসেবে ফিল্টার করা
-                $details = $details->map(function ($t) {
-                    $isStockSell = ($t->stockItem && $t->stockItem->is_stock && $t->stockItem->type === 'sell');
-                    $t->is_stock = $isStockSell;
+            // স্টক সেল হিসেবে ফিল্টার করা
+            $details = $details->map(function ($t) {
+                $isStockSell = ($t->stockItem && $t->stockItem->is_stock && $t->stockItem->type === 'sell');
+                $t->is_stock = $isStockSell;
 
-                    // তারিখ বাংলায় রূপান্তর
-                    $dateStr = \Carbon\Carbon::parse($t->date)->format('d M, Y');
-                    $en = ['0','1','2','3','4','5','6','7','8','9','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-                    $bn = ['০','১','২','৩','৪','৫','৬','৭','৮','৯','জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
-                    $t->bangla_date = str_replace($en, $bn, $dateStr);
-                    
-                    return $t;
+                // তারিখ বাংলায় রূপান্তর
+                $dateStr = \Carbon\Carbon::parse($t->date)->format('d M, Y');
+                $en = ['0','1','2','3','4','5','6','7','8','9','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                $bn = ['০','১','২','৩','৪','৫','৬','৭','৮','৯','জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+                $t->bangla_date = str_replace($en, $bn, $dateStr);
+                
+                return $t;
+            });
+
+            // যদি ডেবিট ক্যাটাগরি হয়, তবে শুধু সেল ট্রানজেকশনগুলো রাখুন, নাহলে সব রাখুন
+            if ($category->type === 'debit') {
+                $details = $details->filter(function ($t) {
+                    return $t->is_stock === true;
                 });
+            }
 
-                // যদি ডেবিট ক্যাটাগরি হয়, তবে শুধু সেল ট্রানজেকশনগুলো রাখুন, নাহলে সব রাখুন
-                if ($category->type === 'debit') {
-                    $details = $details->filter(function ($t) {
-                        return $t->is_stock === true;
-                    });
-                }
-
-                return [
-                    'id' => $category->id,
-                    'name' => $category->name,
-                    'total_amount' => $details->sum('amount'),
-                    'details' => $details,
-                ];
-            })
-            ->filter(function ($item) {
-                // যাদের ট্রানজেকশন আছে তাদেরই দেখান
-                return count($item['details']) > 0;
-            })
-            ->sortByDesc('total_amount');
+            return [
+                'id' => $category->id,
+                'name' => $category->name,
+                'total_amount' => $details->sum('amount'),
+                'details' => $details,
+            ];
+        })
+        ->filter(function ($item) {
+            // যাদের ট্রানজেকশন আছে তাদেরই দেখান
+            return count($item['details']) > 0;
+        })
+        ->sortByDesc('total_amount');
 
         // ২. সমস্ত খরচের খাতসমূহের টোটাল সামারি + ট্রানজেকশন ডিটেইলস
         $categoryDebits = \App\Models\Category::where('type', 'debit')
