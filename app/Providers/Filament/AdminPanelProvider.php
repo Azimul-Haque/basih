@@ -106,22 +106,39 @@ class AdminPanelProvider extends PanelProvider
                         font-size: 0.95rem !important;
                         font-weight: 600 !important;
                     }
-
-                    /* 🔥 ১০০% ওয়ার্কিং সিএসএস হ্যাক: টোস্ট নোটিফিকেশন স্ক্রিনের নিচে সেন্টারে নামানো */
-                    .fi-no-notification-container {
-                        position: fixed !important;
-                        bottom: 20px !important; /* স্ক্রিনের নিচ থেকে দূরত্ব */
-                        top: auto !important;    /* ওপরের ডিফল্ট পজিশন বাতিল */
-                        left: 50% !important;
-                        transform: translateX(-50%) !important; /* পারফেক্ট সেন্টার অ্যালাইনমেন্ট */
-                        z-index: 9999 !important; /* যেন সব এলিমেন্টের ওপরে থাকে */
-                        display: flex !important;
-                        flex-direction: column !important;
-                        gap: 10px !important;
-                        width: 100% !important;
-                        max-width: 350px !important; /* মোবাইলের জন্য পারফেক্ট উইডথ */
-                    }
                 </style>
+            '),
+        );
+
+        FilamentView::registerRenderHook(
+            'panels::head.end',
+            fn (): string => new HtmlString('
+                <script>
+                    // 🔥 লাইভওয়্যার বা ফিলামেন্ট লোড হওয়ার পর নোটিফিকেশন কন্টেইনার নিচে নামানোর জাভাস্ক্রিপ্ট ম্যাজিক
+                    document.addEventListener("DOMContentLoaded", () => {
+                        const observer = new MutationObserver((mutations) => {
+                            // ফিলামেন্টের নোটিফিকেশন এলিমেন্ট খুঁজে বের করা
+                            const container = document.querySelector(".filament-notifications") || 
+                                              document.querySelector("[id^=\'notification-\']")?.parentElement ||
+                                              document.querySelector(".fi-no");
+                            
+                            if (container) {
+                                // ওপরের ডিফল্ট ক্লাসগুলো বদলে নিচের সেন্টারে (Bottom-Center) লক করা হলো
+                                container.style.position = "fixed";
+                                container.style.top = "auto";
+                                container.style.bottom = "24px";
+                                container.style.left = "50%";
+                                container.style.transform = "translateX(-50%)";
+                                container.style.zIndex = "99999";
+                                container.style.width = "90%";
+                                container.style.maxWidth = "360px";
+                            }
+                        });
+
+                        // পুরো বডি অবজার্ভ করা যেন টোস্ট আসার সাথে সাথেই স্ক্রিপ্ট ফায়ার হয়
+                        observer.observe(document.body, { childList: true, subtree: true });
+                    });
+                </script>
             '),
         );
 
