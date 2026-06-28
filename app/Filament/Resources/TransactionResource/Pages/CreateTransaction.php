@@ -12,6 +12,21 @@ class CreateTransaction extends CreateRecord
 {
     protected static string $resource = TransactionResource::class;
 
+    public function mount(): void
+    {
+        parent::mount();
+
+        // ইউআরএল থেকে 'type' এর ভ্যালু নেওয়া (debit অথবা credit)
+        $urlType = request()->query('type');
+
+        if (in_array($urlType, ['credit', 'debit'])) {
+            // ফিলামেন্ট ফর্মের স্টেট-এ টাইপটি ইনজেক্ট করে দেওয়া হলো
+            $this->form->fill([
+                'type' => $urlType,
+            ]);
+        }
+    }
+
     protected function getRedirectUrl(): string
     {
         $resource = static::getResource();
