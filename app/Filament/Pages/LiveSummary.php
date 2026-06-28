@@ -12,7 +12,7 @@ class LiveSummary extends Page
     protected static ?string $title = 'একনজরে প্রতিবেদন';
     protected static ?string $navigationLabel = 'একনজরে প্রতিবেদন';
     protected static ?string $slug = 'live-summary';
-    protected static ?int $navigationSort = 2; // সাইডবারে ড্যাশবোর্ডের ঠিক নিচে থাকবে
+    protected static ?int $navigationSort = 4; // সাইডবারে ড্যাশবোর্ডের ঠিক নিচে থাকবে
 
     protected static string $view = 'filament.pages.live-summary';
 
