@@ -581,20 +581,20 @@ class TransactionResource extends Resource
         ];
     }
 
-    public static function infolist(Infolist $infolist): Infolist
-    {
-        return $infolist
-            ->schema([
-                Card::make([
-                    TextEntry::make('date')->label('তারিখ')->date('d M, Y'),
-                    TextEntry::make('category.name')->label('খাত/ক্যাটাগরি')->weight('bold'),
-                    TextEntry::make('amount')
-                        ->label('টাকার পরিমাণ')
-                        ->money('BDT')
-                        ->weight('bold')
-                        ->color(fn ($record) => $record->type === 'credit' ? 'success' : 'danger'),
-                    TextEntry::make('note')->label('মন্তব্য')->placeholder('কোনো মন্তব্য নেই'),
-                ])->columns(2)
-            ]);
-    }
+    // public static function infolist(Infolist $infolist): Infolist
+    // {
+    //     return $infolist
+    //         ->schema([
+    //             Card::make([
+    //                 TextEntry::make('date')->label('তারিখ')->date('d M, Y'),
+    //                 TextEntry::make('category.name')->label('খাত/ক্যাটাগরি')->weight('bold'),
+    //                 TextEntry::make('amount')
+    //                     ->label('টাকার পরিমাণ')
+    //                     ->money('BDT')
+    //                     ->weight('bold')
+    //                     ->color(fn ($record) => $record->type === 'credit' ? 'success' : 'danger'),
+    //                 TextEntry::make('note')->label('মন্তব্য')->placeholder('কোনো মন্তব্য নেই'),
+    //             ])->columns(2)
+    //         ]);
+    // }
 }
