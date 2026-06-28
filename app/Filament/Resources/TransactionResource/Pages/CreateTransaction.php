@@ -22,6 +22,7 @@ class CreateTransaction extends CreateRecord
         if (in_array($urlType, ['credit', 'debit'])) {
             // ফিলামেন্ট ফর্মের স্টেট-এ টাইপটি ইনজেক্ট করে দেওয়া হলো
             $this->form->fill([
+                'date' => now()->toDateString(),
                 'type' => $urlType,
             ]);
         }
