@@ -27,7 +27,7 @@ class CustomLogin extends BaseLogin
                     ->extraInputAttributes(['inputmode' => 'numeric']),
 
                 $this->getPasswordFormComponent()
-                    ->label('পিন নম্বর')
+                    ->label('পাসওয়ার্ড')
                     ->placeholder('••••••••'),
 
                 $this->getRememberFormComponent()
