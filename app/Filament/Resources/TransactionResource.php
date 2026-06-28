@@ -415,18 +415,18 @@ class TransactionResource extends Resource
                             ->label('তারিখ')
                             ->color('gray')
                             ->size('sm')
-                            ->sortable(), // 🔥 তারিখ অনুযায়ী টেবিল সর্ট করার সুবিধা
+                            ->sortable(), // 🔥 তারিখ অনুযায়ী টেবিল সর্ট করার সুবিধা
 
                         Tables\Columns\TextColumn::make('category.name')
                             ->label('খাত')
                             ->weight('bold')
                             ->searchable()
                             ->size('md')
-                            ->sortable(), // 🔥 খাত/ক্যাটাগরি অনুযায়ী টেবিল সর্ট করার সুবিধা
+                            ->sortable(), // 🔥 খাত/ক্যাটাগরি অনুযায়ী টেবিল সর্ট করার সুবিধা
 
                         // যদি ক্যাটাগরি স্টকের হয়, তবেই মালের পরিমাণ ও একক লাইভ দেখাবে
                         Tables\Columns\TextColumn::make('stockItem.quantity')
-                            ->label('স্টক বিবরণী')
+                            ->label('স্টک বিবরণী')
                             ->formatStateUsing(function ($state, $record) {
                                 if (!$record || !$record->category || !$record->category->is_stock || !$record->stockItem) {
                                     return null;
@@ -465,8 +465,10 @@ class TransactionResource extends Resource
                         ->color(fn ($record) => $record->type === 'credit' ? 'success' : 'danger')
                         ->weight('bold')
                         ->alignEnd()
-                        ->sortable(), // 🔥 টাকার অংক অনুযায়ী সর্ট করার সুবিধা
-                ]),
+                        ->sortable(), // 🔥 টাকার অংক অনুযায়ী সর্ট করার সুবিধা
+                ])
+                // 🔥 ফিলামেন্ট v3 কাস্টম লেআউটে লাইনের যেকোনো জায়গায় ক্লিক করলে ভিউ মোডাল ট্রিপ করার অফিশিয়াল মেথড
+                ->action(Tables\Actions\ViewAction::class), 
                 
                 // ডাইনামিক কলাপসিবল প্যানেল: মন্তব্য থাকলেই কেবল ড্রপডাউন অ্যারো বাটন ও প্যানেল আসবে
                 Tables\Columns\Layout\Panel::make([
@@ -477,21 +479,19 @@ class TransactionResource extends Resource
                             ->size('sm'),
                     ]),
                 ])
-                // ->collapsible()
+                ->collapsible()
                 ->visible(fn ($record) => $record && !empty($record->note)),
             ])
             ->filters([
-                // 🔥 ফিল্টার ১: খাত/ক্যাটাগরি ফিল্টার ড্রপডাউন
+                // 🔥 ফিল্টার ১: খাত/ক্যাটাগরি ফিল্টার ড্রপডাউন (মোবাইল অপ্টিমাইজড)
                 Tables\Filters\SelectFilter::make('category_id')
-                    ->label('খাত অনুযায়ী ফিল্টার')
+                    ->label('খাত অনুযায়ী ফিল্টার')
                     ->options(function () {
                         $currentUrl = request()->url();
                         
                         if (str_contains($currentUrl, 'credits')) {
-                            // ১. ডিফল্ট ক্রেডিট টাইপ ক্যাটাগরিগুলোর আইডি নেওয়া হলো
                             $creditCategoryIds = \App\Models\Category::where('type', 'credit')->pluck('id')->toArray();
 
-                            // ২. ট্রানজেকশন ও স্টক আইটেম টেবিল থেকে যে স্টকগুলোর পরিমাণ এখনো ০-এর বেশি, তাদের ক্যাটাগরি আইডি নেওয়া হলো
                             $activeStockCategoryIds = \App\Models\Transaction::whereHas('stockItem', function ($query) {
                                     $query->where('quantity', '>', 0);
                                 })
@@ -499,22 +499,18 @@ class TransactionResource extends Resource
                                 ->unique()
                                 ->toArray();
 
-                            // দুটি আইডির অ্যারে একসাথে মার্জ করে ইউনিক আইডি লিস্ট তৈরি
                             $finalCategoryIds = array_unique(array_merge($creditCategoryIds, $activeStockCategoryIds));
 
-                            // ফাইনাল আইডি লিস্ট দিয়ে ক্যাটাগরির নামগুলো রিটার্ন করা
                             return \App\Models\Category::whereIn('id', $finalCategoryIds)->pluck('name', 'id');
 
                         } elseif (str_contains($currentUrl, 'debits')) {
-                            // খরচ খাতার জন্য: শুধুমাত্র debit টাইপের ক্যাটাগরিগুলো
                             return \App\Models\Category::where('type', 'debit')->pluck('name', 'id');
                         }
 
-                        // গ্লোবাল ফলব্যাক
                         return \App\Models\Category::pluck('name', 'id');
                     })
-                    ->searchable()
-                    ->preload(),
+                    ->searchable(false) // 🔥 মোবাইল কিবোর্ড অটো ওপেন হওয়া চিরতরে বন্ধ করা হলো
+                    ->preload(),       // অপশনগুলো আগে থেকেই রেন্ডার হয়ে ড্রপডাউনে সুন্দরভাবে থাকবে
 
                 // 🔥 ফিল্টার ২: ডেট রেঞ্চ ফিল্টার (মাসিক বা নির্দিষ্ট মেয়াদের হিসাব)
                 Tables\Filters\Filter::make('date')
@@ -531,21 +527,15 @@ class TransactionResource extends Resource
             ->filtersTriggerAction(
                 fn (\Filament\Tables\Actions\Action $action) => $action
                     ->button()
-                    ->label('ফিল্টার ও অনুসন্ধান') // ফিল্টার ট্রিগার বাটনটি দেখতে প্রফেশনাল লাগবে
+                    ->label('ফিল্টার ও অনুসন্ধান') 
             )
             ->actions([
-
-                // 🔥 নতুন অ্যাকশন: ক্লিক করলে শুধু ডাটা বা বিবরণীটি পপআপ/মোডালে দেখাবে
                 Tables\Actions\ViewAction::make()->iconButton(),
-
-                Tables\Actions\EditAction::make()->iconButton(),
+                Tables\Actions\EditAction::make()->iconButton()->slideOver(), // মোবাইল এডিটের সুবিধার্থে স্লাইড ড্রয়ার লক করা হলো
                 Tables\Actions\DeleteAction::make()->iconButton(),
             ])
-            // ❌ টেবিলের লাইনে বা রেকর্ডে ক্লিক করলে এডিট পেজ বা ফর্ম ইউআরএল ওপেন হওয়া বন্ধ করবে
-            ->recordUrl(null) 
-            
-            // 🔥 ম্যাজিক লাইন: পুরো লাইনের যেকোনো জায়গায় ক্লিক করলে এখন সরাসরি ভিউ মোডাল (ViewAction) ওপেন হবে
-            ->recordClickAction(Tables\Actions\ViewAction::class);
+            // ❌ পুরো টেবিল রো ট্র্যাকিং ডিফল্ট এডিট ইউআরএল ফ্লাশ করা হলো
+            ->recordUrl(null); 
     }
 
     public static function getRelations(): array
