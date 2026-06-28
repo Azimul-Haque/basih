@@ -145,6 +145,5 @@ class AdminPanelProvider extends PanelProvider
 
         // 🔥 ফিলামেন্ট v3 অফিশিয়াল গ্লোবাল নোটিফিকেশন পজিশন ফিক্স
         Notifications::alignment(\Filament\Support\Enums\Alignment::Center);
-        Notifications::verticalAlignment(\Filament\Support\Enums\VerticalAlignment::Bottom);
     }
 }
