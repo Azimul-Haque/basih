@@ -7,7 +7,7 @@
                 <div class="flex items-center justify-between mb-4 border-b border-gray-100 dark:border-gray-700 pb-3">
                     <div class="flex items-center gap-2">
                         <span class="text-emerald-500 text-lg">📈</span>
-                        <h4 class="text-base font-bold text-gray-800 dark:text-gray-200">আয়/জমার খাতসমূহ (সর্বমোট)</h4>
+                        <h4 class="text-base font-bold text-gray-800 dark:text-gray-200">জমা/আয়ের খাতসমূহ (সর্বমোট)</h4>
                     </div>
                     <span class="text-sm font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1 rounded-xl">৳{{ number_format($grandTotalCredit, 2) }}</span>
                 </div>
