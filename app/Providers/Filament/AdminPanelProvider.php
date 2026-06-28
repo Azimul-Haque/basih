@@ -17,7 +17,6 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Filament\Notifications\Livewire\Notifications;
 
 use App\Filament\Widgets\LedgerOverview;
 // 🔥 ডিফল্ট ফিলামেন্ট ড্যাশবোর্ডের পরিবর্তে আপনার কাস্টম ড্যাশবোর্ড ক্লাসটি ইম্পোর্ট করা হলো
@@ -107,6 +106,21 @@ class AdminPanelProvider extends PanelProvider
                         font-size: 0.95rem !important;
                         font-weight: 600 !important;
                     }
+
+                    /* 🔥 ১০০% ওয়ার্কিং সিএসএস হ্যাক: টোস্ট নোটিফিকেশন স্ক্রিনের নিচে সেন্টারে নামানো */
+                    .fi-no-notification-container {
+                        position: fixed !important;
+                        bottom: 20px !important; /* স্ক্রিনের নিচ থেকে দূরত্ব */
+                        top: auto !important;    /* ওপরের ডিফল্ট পজিশন বাতিল */
+                        left: 50% !important;
+                        transform: translateX(-50%) !important; /* পারফেক্ট সেন্টার অ্যালাইনমেন্ট */
+                        z-index: 9999 !important; /* যেন সব এলিমেন্টের ওপরে থাকে */
+                        display: flex !important;
+                        flex-direction: column !important;
+                        gap: 10px !important;
+                        width: 100% !important;
+                        max-width: 350px !important; /* মোবাইলের জন্য পারফেক্ট উইডথ */
+                    }
                 </style>
             '),
         );
@@ -142,8 +156,5 @@ class AdminPanelProvider extends PanelProvider
                 ');
             },
         );
-
-        // 🔥 ফিলামেন্ট v3 অফিশিয়াল গ্লোবাল নোটিফিকেশন পজিশন ফিক্স
-        Notifications::alignment(\Filament\Support\Enums\Alignment::Center);
     }
 }
