@@ -442,7 +442,12 @@ class TransactionResource extends Resource
                                 }
                                 
                                 // কন্ডিশন মিললে নামের সাথে 'বিক্রয়' যোগ করে রিটার্ন করবে
-                                return $state . ' (বিক্রয়)';
+                                if ($record->type === 'debit') {
+                                    return $state . ' (বিক্রয়)';
+                                } else {
+                                    return $state . ' (ক্রয়)';
+                                }
+                                
                             }),
 
                         // যদি ক্যাটাগরি স্টকের হয়, তবেই মালের পরিমাণ ও একক লাইভ দেখাবে
