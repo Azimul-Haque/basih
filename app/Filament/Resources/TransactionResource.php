@@ -435,7 +435,16 @@ class TransactionResource extends Resource
                             ->weight('bold')
                             ->searchable()
                             ->size('md')
-                            ->sortable(),
+                            ->sortable()
+                            ->formatStateUsing(function ($state, $record) {
+                                // যদি এটি একটি স্টক সেল হয় (আপনার মডেল অনুযায়ী চেক করুন)
+                                if ($record instanceof \App\Models\Sale) {
+                                    return 'স্টক বিক্রয়'; 
+                                }
+                                
+                                // সাধারণ ট্রানজেকশনের ক্ষেত্রে ক্যাটাগরির নাম রিটার্ন করবে
+                                return $state ?? 'অনির্ধারিত';
+                            }),
 
                         // যদি ক্যাটাগরি স্টকের হয়, তবেই মালের পরিমাণ ও একক লাইভ দেখাবে
                         Tables\Columns\TextColumn::make('stockItem.quantity')
