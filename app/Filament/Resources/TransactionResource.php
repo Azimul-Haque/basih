@@ -438,6 +438,9 @@ class TransactionResource extends Resource
                             ->sortable()
                             ->formatStateUsing(function ($state, $record) {
                                 // যদি এটি একটি স্টক সেল হয় (আপনার মডেল অনুযায়ী চেক করুন)
+                                if (!$record || !$record->category || !$record->category->is_stock || !$record->stockItem) {
+                                    return null;
+                                }
                                 if ($record instanceof \App\Models\Sale) {
                                     return 'স্টক বিক্রয়'; 
                                 }
