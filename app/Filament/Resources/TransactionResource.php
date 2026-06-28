@@ -356,37 +356,31 @@ class TransactionResource extends Resource
                             })
                             ->hintColor('warning')
                             ->maxValue(function (Forms\Get $get, $record) {
-                                $type = $get('../../type') ?? $get('../type');
-                                $categoryId = $get('../../category_id') ?? $get('../category_id');
+                                $categoryId = $get('category_id') ?? $get('../../category_id');
+                                if (!$categoryId) return 999999;
 
-                                if ($type === 'debit' || !$categoryId) return 99999999; 
+                                // সরাসরি ডাটাবেজ থেকে ডাটা আনুন
+                                $purchased = \DB::table('stock_items')
+                                    ->join('transactions', 'transactions.id', '=', 'stock_items.transaction_id')
+                                    ->where('transactions.category_id', $categoryId)
+                                    ->where('transactions.type', 'debit')
+                                    ->sum('stock_items.quantity');
 
-                                // ১. কেনাকাটা (Debit): নির্দিষ্ট ক্যাটাগরির সমস্ত কেনা মাল
-                                $totalPurchased = (float) \App\Models\Transaction::where('category_id', $categoryId)
-                                    ->where('type', 'debit')
-                                    ->whereHas('stockItem') // নিশ্চিত করছি যেন স্টক আইটেম থাকে
-                                    ->withSum('stockItem as total_qty', 'quantity')
-                                    ->get()
-                                    ->sum('total_qty');
+                                $sold = \DB::table('stock_items')
+                                    ->join('transactions', 'transactions.id', '=', 'stock_items.transaction_id')
+                                    ->where('transactions.category_id', $categoryId)
+                                    ->where('transactions.type', 'credit')
+                                    ->where('transactions.id', '!=', $record?->id ?? 0) // বর্তমানটি বাদে
+                                    ->sum('stock_items.quantity');
 
-                                // ২. বিক্রি (Credit): বর্তমান ট্রানজেকশন বাদে বাকি সব বিক্রি
-                                $totalSold = (float) \App\Models\Transaction::where('category_id', $categoryId)
-                                    ->where('type', 'credit')
-                                    ->where('id', '!=', $record?->id ?? 0) // আপডেট করার সময় বর্তমানটি বাদ দেওয়া
-                                    ->whereHas('stockItem')
-                                    ->withSum('stockItem as total_qty', 'quantity')
-                                    ->get()
-                                    ->sum('total_qty');
-                                
-                                $availableStock = $totalPurchased - $totalSold;
+                                $available = $purchased - $sold;
 
-                                // ৩. যদি এডিট মোড হয়, তবে পুরনো স্টকের পরিমাণ যোগ করা
+                                // আপডেট মোড হলে বর্তমান রেকর্ডের ভ্যালু যোগ হবে
                                 if ($record && $record->stockItem) {
-                                    $availableStock += (float) $record->stockItem->quantity;
+                                    $available += (float) $record->stockItem->quantity;
                                 }
 
-                                // লজিক্যাল বাফার (পূর্ণসংখ্যা হলে)
-                                return round($availableStock, 2); 
+                                return (float) $available;
                             })
                             // ->rules(function (Forms\Get $get, $record) {
                             //     $type = $get('../../type') ?? $get('../type') ?? 'credit';
