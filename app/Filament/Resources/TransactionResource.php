@@ -359,31 +359,34 @@ class TransactionResource extends Resource
                                 $type = $get('../../type') ?? $get('../type');
                                 $categoryId = $get('../../category_id') ?? $get('../category_id');
 
-                                // যদি ডেবিট হয় বা ক্যাটাগরি না থাকে, কোনো লিমিট নাই
                                 if ($type === 'debit' || !$categoryId) return 99999999; 
 
-                                // কুয়েরি: টোটাল পারচেজ - টোটাল সোল্ড
-                                $totalPurchased = (float) \DB::table('transactions')
-                                    ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
-                                    ->where('transactions.category_id', $categoryId)
-                                    ->where('transactions.type', 'debit')
-                                    ->sum('stock_items.quantity');
+                                // ১. কেনাকাটা (Debit): নির্দিষ্ট ক্যাটাগরির সমস্ত কেনা মাল
+                                $totalPurchased = (float) \App\Models\Transaction::where('category_id', $categoryId)
+                                    ->where('type', 'debit')
+                                    ->whereHas('stockItem') // নিশ্চিত করছি যেন স্টক আইটেম থাকে
+                                    ->withSum('stockItem as total_qty', 'quantity')
+                                    ->get()
+                                    ->sum('total_qty');
 
-                                $totalSold = (float) \DB::table('transactions')
-                                    ->join('stock_items', 'transactions.id', '=', 'stock_items.transaction_id')
-                                    ->where('transactions.category_id', $categoryId)
-                                    ->where('transactions.type', 'credit')
-                                    ->where('transactions.id', '!=', $record?->id ?? 0) // বর্তমান ট্রানজেকশন বাদ
-                                    ->sum('stock_items.quantity');
+                                // ২. বিক্রি (Credit): বর্তমান ট্রানজেকশন বাদে বাকি সব বিক্রি
+                                $totalSold = (float) \App\Models\Transaction::where('category_id', $categoryId)
+                                    ->where('type', 'credit')
+                                    ->where('id', '!=', $record?->id ?? 0) // আপডেট করার সময় বর্তমানটি বাদ দেওয়া
+                                    ->whereHas('stockItem')
+                                    ->withSum('stockItem as total_qty', 'quantity')
+                                    ->get()
+                                    ->sum('total_qty');
                                 
                                 $availableStock = $totalPurchased - $totalSold;
 
-                                // আপডেট মোড হলে বর্তমান রেকর্ড যোগ করা
+                                // ৩. যদি এডিট মোড হয়, তবে পুরনো স্টকের পরিমাণ যোগ করা
                                 if ($record && $record->stockItem) {
                                     $availableStock += (float) $record->stockItem->quantity;
                                 }
 
-                                return $availableStock; // ফিলামেন্ট নিজে থেকেই এটা দিয়ে ভ্যালিডেশন করবে
+                                // লজিক্যাল বাফার (পূর্ণসংখ্যা হলে)
+                                return round($availableStock, 2); 
                             })
                             // ->rules(function (Forms\Get $get, $record) {
                             //     $type = $get('../../type') ?? $get('../type') ?? 'credit';
