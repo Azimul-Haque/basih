@@ -56,6 +56,10 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+            ->notifications([
+                'alignment' => \Filament\Support\Enums\Alignment::Center, // সেন্টারে থাকবে
+                'position' => \Filament\Support\Enums\Alignment::Bottom,  // স্ক্রিনের একদম নিচে দেখাবে
+            ])
             ->authMiddleware([
                 Authenticate::class,
             ]);
