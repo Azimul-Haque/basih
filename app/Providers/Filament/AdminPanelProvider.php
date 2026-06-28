@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Providers\Auth\Filament;
+namespace App\Providers\Auth;
 
 use Filament\Support\Facades\FilamentView; // 👈 এই নেমস্পেসটি ফাইলের একদম ওপরে নিশ্চিত করুন
 use Illuminate\Support\HtmlString;
