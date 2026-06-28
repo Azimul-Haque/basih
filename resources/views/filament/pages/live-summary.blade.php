@@ -51,10 +51,10 @@
             <div class="flex items-center justify-between mb-4 border-b border-gray-100 dark:border-gray-700 pb-3">
                 <div class="flex items-center gap-2">
                     <span class="p-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600 text-lg">📦</span>
-                    <h3 class="text-base font-bold text-gray-800 dark:text-gray-200">বিদ্যমান মালপত্র ও লাইভ স্টক এনালাইসিস</h3>
+                    <h3 class="text-base font-bold text-gray-800 dark:text-gray-200">বর্তমান গুদাম ও লাইভ স্টক ব্যালেন্স</h3>
                 </div>
                 <div class="text-right">
-                    <span class="text-xs text-gray-400 block">স্টকে থাকা মোট মালের আনুমানিক মূল্য</span>
+                    <span class="text-xs text-gray-400 block">স্টকে থাকা মালের মোট মূল্য</span>
                     <span class="text-base font-black text-amber-600">৳{{ number_format($totalStockValue, 2) }}</span>
                 </div>
             </div>
@@ -70,17 +70,12 @@
                         <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/40 rounded-xl border border-gray-100/50 dark:border-gray-700/50">
                             <div class="space-y-1">
                                 <span class="font-bold text-sm text-gray-800 dark:text-gray-200 block">{{ $stock->category_name }}</span>
-                                <span class="text-xs text-gray-500 block">অবশিষ্ট: <strong class="text-gray-700 dark:text-gray-300">{{ number_format($stock->quantity) }}</strong> {{ $stock->unit_name ?? 'একক' }}</span>
-                                <span class="text-[11px] text-gray-400 block">একক দর: ৳{{ number_format($stock->unit_price, 2) }}</span>
+                                <span class="text-xs text-gray-500 block">গুদামে আছে: <strong class="text-amber-600 font-bold text-sm">{{ number_format($stock->current_quantity) }}</strong> {{ $stock->unit_name ?? 'একক' }}</span>
+                                <span class="text-[11px] text-gray-400 block">সর্বশেষ ক্রয়ের দর: ৳{{ number_format($stock->last_unit_price ?? 0, 2) }}</span>
                             </div>
-                            <div class="text-right space-y-2">
-                                <span class="text-xs font-bold text-gray-700 dark:text-gray-300 block">৳{{ number_format($stock->asset_value, 2) }}</span>
-                                
-                                @if($stock->quantity <= 5)
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 animate-pulse border border-rose-100 dark:border-rose-900">⚠️ রি-অর্ডার</span>
-                                @else
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">✅ পর্যাপ্ত</span>
-                                @endif
+                            <div class="text-right">
+                                <span class="text-xs text-gray-400 block">বর্তমান স্টক ভ্যালু</span>
+                                <span class="text-sm font-bold text-gray-800 dark:text-gray-200 block">৳{{ number_format($stock->asset_value, 2) }}</span>
                             </div>
                         </div>
                     @endforeach
