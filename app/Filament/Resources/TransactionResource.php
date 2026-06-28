@@ -540,7 +540,12 @@ class TransactionResource extends Resource
 
                 Tables\Actions\EditAction::make()->iconButton(),
                 Tables\Actions\DeleteAction::make()->iconButton(),
-            ]);
+            ])
+            // ❌ টেবিলের লাইনে বা রেকর্ডে ক্লিক করলে এডিট পেজ বা ফর্ম ইউআরএল ওপেন হওয়া বন্ধ করবে
+            ->recordUrl(null) 
+            
+            // 🔥 ম্যাজিক লাইন: পুরো লাইনের যেকোনো জায়গায় ক্লিক করলে এখন সরাসরি ভিউ মোডাল (ViewAction) ওপেন হবে
+            ->recordClickAction(Tables\Actions\ViewAction::class);
     }
 
     public static function getRelations(): array
