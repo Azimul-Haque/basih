@@ -63,32 +63,48 @@ class AdminPanelProvider extends PanelProvider
 
     public function boot(): void
     {
-        // 🔥 গ্লোবাল রেন্ডার হুক ব্যবহার করে হেড ট্যাগে কাস্টম সিএসএস ইনজেক্ট করা হলো
+        // 🔥 গুগল ফন্টস প্রি-কানেক্ট এবং সিএসএস ইনজেকশন (পারফরম্যান্স ও সুন্দর বাংলা ফন্টের জন্য)
         FilamentView::registerRenderHook(
             'panels::head.end',
             fn (): string => new HtmlString('
+                <link rel="preconnect" href="https://fonts.googleapis.com">
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+
                 <style>
-                    /* সাইডবার বা মেনুর টেক্সট বড় করা */
+                    /* পুরো ফিলামেন্ট প্যানেলের ওপর বাংলা ফন্ট অ্যাপ্লাই করা হলো */
+                    body, html, select, input, textarea, button, span, div {
+                        font-family: "Hind Siliguri", sans-serif !important;
+                    }
+
+                    /* সাইডবার বা মেনুর টেক্সট বড় ও স্পষ্ট করা */
                     .fi-sidebar-item-label {
-                        font-size: 1.1rem !important; /* ডিফল্ট থেকে বড় */
+                        font-size: 1.15rem !important;
                         font-weight: 600 !important;
+                        letter-spacing: 0.3px;
                     }
                     
-                    /* সাইডবার আইকনগুলোর সাইজ সামান্য বড় করা */
+                    /* সাইডবার আইকনগুলোর সাইজ অপ্টিমাইজেশন */
                     .fi-sidebar-item-icon {
-                        width: 1.5rem !important;
-                        height: 1.5rem !important;
+                        width: 1.4rem !important;
+                        height: 1.4rem !important;
                     }
 
-                    /* ড্যাশবোর্ডের মেইন হেডিং বড় করা */
+                    /* ড্যাশবোর্ডের মেইন হেডিং */
                     .fi-header-heading {
-                        font-size: 1.65rem !important;
-                        font-weight: 800 !important;
+                        font-size: 1.75rem !important;
+                        font-weight: 700 !important;
                     }
 
-                    /* টেবিল বা কার্ডের ভেতরের সাধারণ টেক্সট রিডাবিলিটি বাড়ানো */
+                    /* টেবিল এবং কার্ডের ভেতরের সাধারণ টেক্সট রিডাবিলিটি */
                     .fi-ta-text, .fi-wi-stats-overview-stat {
+                        font-size: 1rem !important;
+                    }
+                    
+                    /* টেবিল হেডার টেক্সট */
+                    .fi-ta-header-cell-label {
                         font-size: 0.95rem !important;
+                        font-weight: 600 !important;
                     }
                 </style>
             '),
