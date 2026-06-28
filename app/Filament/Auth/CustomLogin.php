@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Filament\Auth; // 👈 আপনার ফোল্ডার অনুযায়ী একদম সঠিক নেমস্পেস
+namespace App\Filament\Auth;
 
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
-use Filament\Pages\Auth\Login as BaseLogin; // 👈 এটি ফিলামেন্ট ভেন্ডরের কোর লগইন ক্লাস
+use Filament\Pages\Auth\Login as BaseLogin;
 
 class CustomLogin extends BaseLogin
 {
@@ -19,18 +19,30 @@ class CustomLogin extends BaseLogin
     {
         return $form
             ->schema([
-                $this->getEmailFormComponent()
-                    ->label('ইমেইল এড্রেস')
-                    ->placeholder('admin@hisab.com'),
+                TextInput::make('mobile') // 👈 আপনার ডাটাবেজের আসল কলাম
+                    ->label('মোবাইল নম্বর')
+                    ->placeholder('01711000000')
+                    ->required()
+                    ->autofocus()
+                    ->extraInputAttributes(['inputmode' => 'numeric']),
 
                 $this->getPasswordFormComponent()
-                    ->label('পাসওয়ার্ড')
-                    ->placeholder('••••••••'),
+                    ->label('পিন নম্বর')
+                    ->placeholder('••••'),
 
                 $this->getRememberFormComponent()
                     ->label('লগইন তথ্য মনে রাখুন'),
             ])
             ->statePath('data');
+    }
+
+    // 🔥 ল্যারাভেলকে বলা: 'mobile' কলাম দিয়ে ইউজার ভেরিফাই করো
+    protected function getCredentialsFromFormData(array $data): array
+    {
+        return [
+            'mobile' => $data['mobile'], // 👈 পরিবর্তন এখানে
+            'password' => $data['password'],
+        ];
     }
 
     protected function getAuthenticateFormAction(): Action
