@@ -21,24 +21,36 @@ class LiveSummary extends Page
      */
     protected function getViewData(): array
     {
-        // ১. সমস্ত আয়ের খাতসমূহের টোটাল সামারি + ট্রানজেকশন ডিটেইলস
+        // ১. সমস্ত আয়ের খাতসমূহের টোটাল সামারি + স্টক সেলসহ
         $categoryCredits = \App\Models\Category::where('type', 'credit')
             ->whereHas('transactions')
             ->get()
             ->map(function ($category) {
-                // এই খাতের সমস্ত ট্রানজেকশন হিস্ট্রি (তারিখ ও অ্যামাউন্ট)
                 $details = \App\Models\Transaction::where('category_id', $category->id)
                     ->orderByDesc('date')
                     ->orderByDesc('id')
-                    ->get(['date', 'amount'])
-                    ->map(function ($t) {
-                        // তারিখ বাংলায় রূপান্তর
-                        $dateStr = \Carbon\Carbon::parse($t->date)->format('d M, Y');
-                        $en = ['0','1','2','3','4','5','6','7','8','9','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-                        $bn = ['০','১','২','৩','৪','৫','৬','৭','৮','৯','জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
-                        $t->bangla_date = str_replace($en, $bn, $dateStr);
-                        return $t;
-                    });
+                    ->get(['date', 'amount']);
+
+                // স্টক সেলের ডাটা যোগ করা (যদি আপনার মডেলটির নাম Sale হয়)
+                // ধরছি আপনার স্টকের ডাটা 'Sale' মডেলে আছে এবং তার 'amount' ও 'created_at' কলাম আছে
+                if ($category->name === 'Stock Sale' || $category->name === 'স্টক বিক্রি') {
+                     $stockSales = \App\Models\Sale::orderByDesc('created_at')
+                        ->get(['created_at as date', 'amount'])
+                        ->map(function ($s) {
+                            $s->is_stock = true; // চেনার জন্য একটি ফ্ল্যাগ
+                            return $s;
+                        });
+                     $details = $details->concat($stockSales)->sortByDesc('date');
+                }
+
+                // বাংলা তারিখ রূপান্তর
+                $details->transform(function ($t) {
+                    $dateStr = \Carbon\Carbon::parse($t->date)->format('d M, Y');
+                    $en = ['0','1','2','3','4','5','6','7','8','9','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                    $bn = ['০','১','২','৩','৪','৫','৬','৭','৮','৯','জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+                    $t->bangla_date = str_replace($en, $bn, $dateStr);
+                    return $t;
+                });
 
                 return [
                     'id' => $category->id,
