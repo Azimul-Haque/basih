@@ -20,6 +20,10 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 use Filament\Navigation\NavigationItem;
 
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\Card;
+
 class TransactionResource extends Resource
 {
     protected static ?string $model = Transaction::class;
