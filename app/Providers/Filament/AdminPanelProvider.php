@@ -106,6 +106,31 @@ class AdminPanelProvider extends PanelProvider
                         font-size: 0.95rem !important;
                         font-weight: 600 !important;
                     }
+
+                    /* 🔥 ফিলামেন্ট v3-এর জন্য ওয়ান-হ্যান্ডেড মোবাইল ফ্রেন্ডলি টোস্ট ফিক্স */
+                    @media (max-width: 1023px) {
+                        /* ফিলামেন্টের নোটিফিকেশন র‍্যাপার কন্টেইনারকে স্ক্রিনের নিচে পুশ করা */
+                        div[id^="notification-"], 
+                        .fi-no-notification-container,
+                        div.fixed.inset-4.z-50 {
+                            top: auto !important;
+                            bottom: env(safe-area-inset-bottom, 24px) !important;
+                            left: 50% !important;
+                            right: auto !important;
+                            transform: translateX(-50%) !important;
+                            display: flex !important;
+                            flex-direction: column-reverse !important; /* নতুন মেসেজ নিচে আসবে */
+                            width: 90% !important;
+                            max-width: 360px !important;
+                        }
+                        
+                        /* ভেতরের প্রতিটি টোস্টের মার্জিন ও অ্যানিমেশন অপ্টিমাইজেশন */
+                        .fi-no-notification {
+                            margin-top: 8px !important;
+                            margin-bottom: 0 !important;
+                            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+                        }
+                    }
                 </style>
             '),
         );
