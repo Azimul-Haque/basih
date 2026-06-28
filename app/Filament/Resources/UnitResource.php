@@ -50,10 +50,18 @@ class UnitResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
+                Tables\Columns\TextColumn::make('index')
                     ->label('ক্রমিক')
-                    ->sortable()
-                    ->searchable(),
+                    ->rowIndex() // 🔥 ডাটাবেজ আইডি বাদ দিয়ে ১ থেকে লাইভ রো সিরিয়াল নম্বর জেনারেট করবে
+                    ->formatStateUsing(function ($state) {
+                        if (!$state) return null;
+
+                        // ইংরেজি সংখ্যাকে ডাইনামিক বাংলায় কনভার্ট করার ম্যাপিং
+                        $en = ['0','1','2','3','4','5','6','7','8','9'];
+                        $bn = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+                        
+                        return str_replace($en, $bn, $state);
+                    }),
 
                 Tables\Columns\TextColumn::make('name')
                     ->label('এককের নাম')
