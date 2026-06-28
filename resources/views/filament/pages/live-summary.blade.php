@@ -28,7 +28,7 @@
                 <div class="flex items-center justify-between mb-4 border-b border-gray-100 dark:border-gray-700 pb-3">
                     <div class="flex items-center gap-2">
                         <span class="text-rose-500 text-lg">📉</span>
-                        <h4 class="text-base font-bold text-gray-800 dark:text-gray-200">খরচের খাতসমূহ (সর্বমোট)</h4>
+                        <h4 class="text-base font-bold text-gray-800 dark:text-gray-200">খরচ/বিনিয়োগের খাতসমূহ (সর্বমোট)</h4>
                     </div>
                     <span class="text-sm font-black text-rose-600 bg-rose-50 dark:bg-rose-950/30 px-2.5 py-1 rounded-xl">৳{{ number_format($grandTotalDebit, 2) }}</span>
                 </div>
