@@ -31,6 +31,24 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
+            ->extraStyles([
+                '
+                /* সাইডবার মেনু টেক্সট বড় করা */
+                .fi-sidebar-item-label {
+                    font-size: 1.15rem !important; /* ডিফল্ট থেকে প্রায় ২০% বড় */
+                    font-weight: 700 !important;
+                }
+                /* ড্যাশবোর্ডের মূল হেডিং ও জেনারেল টেক্সট অপ্টিমাইজেশন */
+                .fi-header-heading {
+                    font-size: 1.75rem !important;
+                    font-weight: 900 !important;
+                }
+                /* টেবিল বা কাস্টম উইজেটের ভেতরকার সাধারণ টেক্সট */
+                .fi-ta-text {
+                    font-size: 1rem !important;
+                }
+                '
+            ]);
             ->sidebarCollapsibleOnDesktop()
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
