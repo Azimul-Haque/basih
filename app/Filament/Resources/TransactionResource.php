@@ -73,7 +73,7 @@ class TransactionResource extends Resource
                         Forms\Components\Select::make('category_id')
                             ->label('খাত / ক্যাটাগরি')
                             ->required()
-                            ->searchable()
+                            // ->searchable()
                             ->live() 
                             ->options(function (Forms\Get $get) {
                                 $selectedType = $get('type') ?? 'credit';
